@@ -2,8 +2,8 @@
 
 ## What's this?
 
-`basis` is the core java utility library for projects at AddThis, both
-internal and open source.
+`basis` is the core java utility library for projects at
+[AddThis](http://www.addthis.com/), both internal and open source.
 
 
 ## Building
