@@ -107,9 +107,9 @@
   </reporting>
 
   <scm>
-    <connection>scm:git:http://git.clearspring.local/basis.git</connection>
-    <developerConnection>scm:git:http://git.clearspring.local/basis.git</developerConnection>
-    <url>scm:git:http://git.clearspring.local/basis.git</url>
+    <connection>scm:git:git@github.com:addthis/basis.git</connection>
+    <developerConnection>scm:git:git@github.com:addthis/basis.git</developerConnection>
+    <url>https://github.com/addthis/basis</url>
     <tag>HEAD</tag>
   </scm>
 </project>
