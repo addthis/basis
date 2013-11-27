@@ -191,7 +191,7 @@ public class NumberUtils {
     }
 
     public static BigInteger bigIntegerFromBase36(String val) {
-        return bigIntegerFromBase(val, 36);
+        return bigIntegerFromBase(val.toLowerCase(), 36);
     }
 
     public static String toBase64(long val) {
@@ -203,7 +203,7 @@ public class NumberUtils {
     }
 
     public static BigInteger bigIntegerFromBase64(String val) {
-        return bigIntegerFromBase(val.toLowerCase(), 64);
+        return bigIntegerFromBase(val, 64);
     }
 
     public static int intFromBase64(String val) {
