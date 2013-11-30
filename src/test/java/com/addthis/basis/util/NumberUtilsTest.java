@@ -14,6 +14,8 @@
 package com.addthis.basis.util;
 
 import java.math.BigInteger;
+import java.util.Random;
+import java.util.UUID;
 
 import junit.framework.TestCase;
 
@@ -81,6 +83,16 @@ public class NumberUtilsTest extends TestCase {
         assertEquals(val, NumberUtils.bigIntegerFromBase36(NumberUtils.toBase36(val)));
         assertEquals(val, NumberUtils.bigIntegerFromBase64(NumberUtils.toBase64(val)));
      }
+
+    public void testUUID() {
+        Random random = new Random();
+        for(int i = 0; i < 1_000_000; i++) {
+            long hiBits = random.nextLong();
+            long loBits = random.nextLong();
+            UUID uuid = new UUID(hiBits, loBits);
+            assertEquals(uuid, NumberUtils.UUIDFromBase64(NumberUtils.toBase64(uuid)));
+        }
+    }
 
 
     public void testA() {

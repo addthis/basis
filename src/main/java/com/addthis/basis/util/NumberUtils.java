@@ -16,34 +16,39 @@ package com.addthis.basis.util;
 import java.math.BigInteger;
 
 import java.util.Random;
+import java.util.UUID;
 
 public class NumberUtils {
+
+    private static int charToDigit(char character, String val) {
+        if (character >= '0' && character <= '9') {
+            return character - '0';
+        } else if (character >= 'a' && character <= 'z') {
+            return character - 'a' + 10;
+        } else if (character >= 'A' && character <= 'Z') {
+            return character - 'A' + 36;
+        } else if (character == '-') {
+            return 62;
+        } else if (character == '_') {
+            return 63;
+        } else {
+            throw new RuntimeException("invalid base encoding: " + val);
+        }
+    }
 
     /**
      * Converts a base-encoded string to an integer. Does not handle negative
      * numbers;
      */
     public static int intFromBase(String val, int base) {
-        if (base > basechars.length) {
-            throw new RuntimeException(base + " outside base range of 2-" + basechars.length);
+        if (base > MAX_BASE) {
+            throw new RuntimeException(base + " outside base range of 2-" + MAX_BASE);
         }
         int rv = 0;
         char cv[] = val.toCharArray();
         for (char aCv : cv) {
             rv *= base;
-            if (aCv >= '0' && aCv <= '9') {
-                rv += aCv - '0';
-            } else if (aCv >= 'a' && aCv <= 'z') {
-                rv += aCv - 'a' + 10;
-            } else if (aCv >= 'A' && aCv <= 'Z') {
-                rv += aCv - 'A' + 36;
-            } else if (aCv == '-') {
-                rv += 62;
-            } else if (aCv == '_') {
-                rv += 63;
-            } else {
-                throw new RuntimeException("invalid base encoding: " + val);
-            }
+            rv += charToDigit(aCv, val);
         }
         return rv;
     }
@@ -53,33 +58,21 @@ public class NumberUtils {
      * numbers;
      */
     public static long longFromBase(String val, int base) {
-        if (base > basechars.length) {
-            throw new RuntimeException(base + " outside base range of 2-" + basechars.length);
+        if (base > MAX_BASE) {
+            throw new RuntimeException(base + " outside base range of 2-" + MAX_BASE);
         }
         long rv = 0;
         char cv[] = val.toCharArray();
         for (char aCv : cv) {
             rv *= base;
-            if (aCv >= '0' && aCv <= '9') {
-                rv += aCv - '0';
-            } else if (aCv >= 'a' && aCv <= 'z') {
-                rv += aCv - 'a' + 10;
-            } else if (aCv >= 'A' && aCv <= 'Z') {
-                rv += aCv - 'A' + 36;
-            } else if (aCv == '-') {
-                rv += 62;
-            } else if (aCv == '_') {
-                rv += 63;
-            } else {
-                throw new RuntimeException("invalid base encoding: " + val);
-            }
+            rv += charToDigit(aCv, val);
         }
         return rv;
     }
 
     public static BigInteger bigIntegerFromBase(String val, int base) {
-        if (base > basechars.length) {
-                throw new RuntimeException(base + " outside base range of 2-" + basechars.length);
+        if (base > MAX_BASE) {
+                throw new RuntimeException(base + " outside base range of 2-" + MAX_BASE);
         }
         BigInteger rv = BigInteger.ZERO;
         BigInteger biBase = BigInteger.valueOf(base);
@@ -104,6 +97,29 @@ public class NumberUtils {
         return rv;
     }
 
+    public static UUID UUIDFromBase64(String val) {
+        char cv[] = val.toCharArray();
+        long hiBits = 0;
+        int pos = 0;
+        for(int i = 0; i < 11; i++) {
+            hiBits <<= 6;
+            hiBits += charToDigit(cv[pos++], val);
+        }
+        int mixBits = charToDigit(cv[pos++], val);
+        hiBits <<= 2;
+        hiBits += (mixBits >>> 4);
+        /**
+         * loBits only needs to low 4 bits out of the 6 bits
+         * in mixBits but the high 2 bits are going to
+         * fall off anyway as a result of the left shift operations.
+         */
+        long loBits = mixBits;
+        for(int i = 0; i < 10; i++) {
+            loBits <<= 6;
+            loBits += charToDigit(cv[pos++], val);
+        }
+        return new UUID(hiBits, loBits);
+    }
 
     /**
      * Array of chars for generating numbers in alternate bases.
@@ -128,7 +144,7 @@ public class NumberUtils {
     public static final int MAX_BASE = basechars.length;
 
     /**
-     * Public pre-generated Random for what ailes you.
+     * Public pre-generated Random for what ails you.
      */
     public static final Random random = new Random(System.currentTimeMillis());
 
@@ -141,8 +157,8 @@ public class NumberUtils {
     }
 
     public static String toBase(long val, int base, int minlen) {
-        if (base > basechars.length) {
-            throw new RuntimeException(base + " outside base range of 2-" + basechars.length);
+        if (base > MAX_BASE) {
+            throw new RuntimeException(base + " outside base range of 2-" + MAX_BASE);
         }
         char out[] = new char[128];
         for (int i = out.length - 1;; i--) {
@@ -159,8 +175,8 @@ public class NumberUtils {
     }
 
     public static String toBase(BigInteger val, int base, int minlen) {
-        if (base > basechars.length) {
-                throw new RuntimeException(base + " outside base range of 2-" + basechars.length);
+        if (base > MAX_BASE) {
+                throw new RuntimeException(base + " outside base range of 2-" + MAX_BASE);
         }
         char out[] = new char[128];
         BigInteger biBase = BigInteger.valueOf(base);
@@ -172,6 +188,27 @@ public class NumberUtils {
                 return new String(out, i, out.length - i);
             }
         }
+    }
+
+    private static final long SIX_BIT_MASK = 63;
+
+    public static String toBase64(UUID val) {
+        long hiBits = val.getMostSignificantBits();
+        long loBits = val.getLeastSignificantBits();
+        char out[] = new char[22];
+        int pos = 21;
+        for(int i = 0; i < 10; i++) {
+            out[pos--] = basechars[(int) (loBits & SIX_BIT_MASK)];
+            loBits >>>= 6;
+        }
+        int mixBits = (((int) (hiBits & 3)) << 4) | ((int) loBits);
+        out[pos--] = basechars[mixBits];
+        hiBits >>>= 2;
+        for(int i = 0; i < 11; i++) {
+            out[pos--] = basechars[(int) (hiBits & SIX_BIT_MASK)];
+            hiBits >>>= 6;
+        }
+        return new String(out);
     }
 
     public static String toBase36(long val) {
