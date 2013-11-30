@@ -41,7 +41,6 @@ public class IteratorClone<T> implements Iterator<T> {
             list.add(source.next());
         }
         clone = list.iterator();
-        log.trace("cloned " + list.size() + " entries from " + source);
     }
 
     @Override
