@@ -19,9 +19,10 @@ import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * GZ output with control over compression level
+ * GZIPOutputStream with control over compression level
  */
 public final class GZOut extends GZIPOutputStream {
+
     /**
      * Creates a new output stream with the specified buffer size.
      *
@@ -33,6 +34,14 @@ public final class GZOut extends GZIPOutputStream {
      */
     public GZOut(OutputStream out, int buffer, int compression) throws IOException {
         super(out, buffer);
-        def.setLevel(compression);
+        setLevel(compression);
+    }
+
+    /**
+     * Change the compression level.
+     * @param newLevel new compression level to use
+     */
+    public void setLevel (int newLevel) {
+        def.setLevel(newLevel);
     }
 }
