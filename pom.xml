@@ -36,6 +36,22 @@
   <properties>
   </properties>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>1.3.1</version>
+        <configuration>
+          <rules>
+            <DependencyConvergence />
+          </rules>
+          <fail>true</fail>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
     <dependency>
       <groupId>org.slf4j</groupId>
