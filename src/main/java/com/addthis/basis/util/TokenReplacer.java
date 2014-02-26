@@ -44,12 +44,22 @@ public abstract class TokenReplacer {
      */
     public abstract String replace(Region region, String src);
 
-    public String process(String raw) {
+
+    /**
+     * Specify a maximum recursion depth for performing replacements.
+     */
+    public abstract long getMaxDepth();
+
+    public String process(String raw) throws TokenReplacerOverflowException {
         if (raw == null) {
             return null;
         }
-        while (true) {
-            boolean modified = false;
+        String input = raw;
+        long depth;
+        long maxDepth = getMaxDepth();
+        boolean modified = true;
+        for(depth = 0; depth < maxDepth && modified; depth++) {
+            modified = false;
             for (Region region : regions) {
                 int next = raw.indexOf(region.start);
                 if (next >= 0) {
@@ -64,10 +74,9 @@ public abstract class TokenReplacer {
                     }
                 }
             }
-            if (modified) {
-                continue;
-            }
-            break;
+        }
+        if (depth == maxDepth) {
+            throw new TokenReplacerOverflowException(input, maxDepth);
         }
         return raw;
     }
