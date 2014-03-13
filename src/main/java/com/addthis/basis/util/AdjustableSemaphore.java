@@ -18,8 +18,8 @@ import java.util.concurrent.Semaphore;
 /**
  * A simple implementation of an adjustable semaphore.
  * 
+ * Written by Marshall Pierce and released to the public domain
  * See: http://blog.teamlazerbeez.com/2009/04/20/javas-semaphore-resizing/
- * 
  */
 final public class AdjustableSemaphore {
     /**
