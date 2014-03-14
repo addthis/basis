@@ -15,6 +15,8 @@ package com.addthis.basis.util;
 
 import java.util.concurrent.Semaphore;
 
+import com.google.common.base.Objects;
+
 /**
  * A simple implementation of an adjustable semaphore.
  * <p/>
@@ -146,5 +148,13 @@ final public class AdjustableSemaphore {
         protected void reducePermits(int reduction) {
             super.reducePermits(reduction);
         }
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("semaphore", semaphore)
+                .add("maxPermits", maxPermits)
+                .toString();
     }
 }
