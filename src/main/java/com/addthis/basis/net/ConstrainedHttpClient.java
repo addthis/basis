@@ -13,6 +13,10 @@
  */
 package com.addthis.basis.net;
 
+import javax.naming.ServiceUnavailableException;
+
+import java.io.IOException;
+
 import com.addthis.basis.net.http.HttpResponse;
 import com.addthis.basis.util.AdjustableSemaphore;
 
@@ -20,10 +24,6 @@ import org.apache.http.client.methods.HttpRequestBase;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.naming.ServiceUnavailableException;
-
-import java.io.IOException;
 
 /**
  * This class is a wrapper class for HttpUtil that gates the execute method with an adjustable semaphore.
@@ -49,22 +49,16 @@ public abstract class ConstrainedHttpClient {
      * @throws IOException                 If an I/O (transport) error occurs. Some transport exceptions cannot be recovered from.
      */
     public HttpResponse execute(HttpRequestBase request, int timeoutms) throws ServiceUnavailableException, IOException {
-        boolean semaphoreAcquired = false;
-        HttpResponse response = null;
-        try {
-            semaphoreAcquired = semaphore.tryAcquire();
-            if (!semaphoreAcquired) {
-                throw new ServiceUnavailableException("Reached limit of " + getCurrentRequests() + " concurrent requests");
-            } else {
+        if (semaphore.tryAcquire()) {
+            try {
                 logger.trace("Semaphore was acquired. Remaining: {} ", semaphore.availablePermits());
-                response = HttpUtil.execute(request, timeoutms);
-            }
-        } finally {
-            if (semaphoreAcquired) {
+                return HttpUtil.execute(request, timeoutms);
+            } finally {
                 semaphore.release();
             }
+        } else {
+            throw new ServiceUnavailableException("Reached limit of " + getCurrentRequests() + " concurrent requests");
         }
-        return response;
     }
 
     /**
