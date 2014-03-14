@@ -13,16 +13,13 @@
  */
 package com.addthis.basis.net;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import javax.naming.ServiceUnavailableException;
+import org.apache.http.client.methods.HttpGet;
+
+import org.junit.Ignore;
+import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-
-import org.apache.http.client.methods.HttpGet;
-import org.junit.Ignore;
-import org.junit.Test;
 
 @Ignore
 public class ConstrainedHttpClientTest {
@@ -31,9 +28,9 @@ public class ConstrainedHttpClientTest {
     public void basicGetTest() throws Exception {
         HttpGet request = new HttpGet("http://google.com");
         ConstrainedHttpClient httpClient = new ConstrainedHttpClient(100) {
-		};
-		
-    	byte[] response = httpClient.execute(request, 1000).getBody();
+        };
+
+        byte[] response = httpClient.execute(request, 1000).getBody();
         assertNotNull("null response", response);
         assertTrue("zero response length", response.length > 0);
     }
