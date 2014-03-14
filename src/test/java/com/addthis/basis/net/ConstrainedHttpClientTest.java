@@ -39,7 +39,7 @@ public class ConstrainedHttpClientTest {
 
         public void run() {
             try {
-                client.execute(new HttpGet("http://addthis.com"), 1000);
+                client.execute(new HttpGet("http://addthis.com"), 10000);
             } catch (ServiceUnavailableException ex) {
                 unavailable = true;
             } catch (IOException e) {
@@ -57,7 +57,7 @@ public class ConstrainedHttpClientTest {
         HttpGet request = new HttpGet("http://addthis.com");
         ConstrainedHttpClient httpClient = new ConstrainedHttpClient(1);
 
-        byte[] response = httpClient.execute(request, 1000).getBody();
+        byte[] response = httpClient.execute(request, 10000).getBody();
         assertNotNull("null response", response);
         assertTrue("zero response length", response.length > 0);
     }
