@@ -28,7 +28,7 @@ import org.junit.Test;
 public class ConstrainedHttpClientTest {
 
     @Test
-    public void basicGetTest() throws IOException, URISyntaxException, ServiceUnavailableException {
+    public void basicGetTest() throws Exception {
         HttpGet request = new HttpGet("http://google.com");
         ConstrainedHttpClient httpClient = new ConstrainedHttpClient(100) {
 		};

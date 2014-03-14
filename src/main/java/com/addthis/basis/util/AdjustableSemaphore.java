@@ -126,7 +126,7 @@ final public class AdjustableSemaphore {
     }
 
     /**
-     * A trivial subclass of <code>Semaphore</code> that exposes the reducePermits
+     * A trivial subclass of {@code Semaphore} that exposes the reducePermits
      * call to the parent class. Doug Lea says it's ok...
      * http://osdir.com/ml/java.jsr.166-concurrency/2003-10/msg00042.html
      */
