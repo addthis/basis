@@ -13,25 +13,75 @@
  */
 package com.addthis.basis.net;
 
+import javax.naming.ServiceUnavailableException;
+
+import java.io.IOException;
+
 import org.apache.http.client.methods.HttpGet;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-@Ignore
 public class ConstrainedHttpClientTest {
+
+    private static int numThreads = 32;
+
+    private static class AddThisThread extends Thread {
+
+        ConstrainedHttpClient client;
+        boolean unavailable = false;
+
+        AddThisThread(ConstrainedHttpClient client) {
+            this.client = client;
+        }
+
+        public void run() {
+            try {
+                client.execute(new HttpGet("http://addthis.com"), 1000);
+            } catch (ServiceUnavailableException ex) {
+                unavailable = true;
+            } catch (IOException e) {
+            }
+        }
+
+        public boolean getUnavaiable() {
+            return unavailable;
+        }
+
+    }
 
     @Test
     public void basicGetTest() throws Exception {
-        HttpGet request = new HttpGet("http://google.com");
-        ConstrainedHttpClient httpClient = new ConstrainedHttpClient(100) {
-        };
+        HttpGet request = new HttpGet("http://addthis.com");
+        ConstrainedHttpClient httpClient = new ConstrainedHttpClient(1);
 
         byte[] response = httpClient.execute(request, 1000).getBody();
         assertNotNull("null response", response);
         assertTrue("zero response length", response.length > 0);
+    }
+
+    @Test
+    public void unavailableTest() throws Exception {
+        AddThisThread[] threads = new AddThisThread[numThreads];
+        ConstrainedHttpClient client = new ConstrainedHttpClient(1);
+        for (int i = 0; i < numThreads; i++) {
+            threads[i] = new AddThisThread(client);
+        }
+        for (int i = 0; i < numThreads; i++) {
+            threads[i].start();
+        }
+        for (int i = 0; i < numThreads; i++) {
+            try {
+                threads[i].join();
+            } catch (InterruptedException e) {
+            }
+        }
+        boolean unavailable = false;
+        for (int i = 0; i < numThreads; i++) {
+            unavailable |= threads[i].getUnavaiable();
+        }
+        assertTrue("client unavailable", unavailable);
     }
 }

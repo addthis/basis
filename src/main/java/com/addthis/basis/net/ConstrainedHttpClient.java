@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * This class is a wrapper class for HttpUtil that gates the execute method with an adjustable semaphore.
  * When limit is reached, any attempts to send request result in <link>ServiceUnavailableException</link> being thrown.
  */
-public abstract class ConstrainedHttpClient {
+public class ConstrainedHttpClient {
 
     private static final Logger logger = LoggerFactory.getLogger(ConstrainedHttpClient.class);
 
