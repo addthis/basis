@@ -96,7 +96,7 @@ public class AppendLinkedHashMap<K, V>
      */
     void createEntry(int hash, K key, V value, int bucketIndex)
     {
-       AndroidHashMap.HashMapEntry<K, V> old = table[bucketIndex];
+       AndroidHashMapEntry<K, V> old = table[bucketIndex];
         AppendLinkedHashMap.Entry<K, V> e = new AppendLinkedHashMap.Entry<>(hash, key, value, old);
         table[bucketIndex] = e;
         tail.ptr = e;
@@ -121,11 +121,11 @@ public class AppendLinkedHashMap<K, V>
 
     /**
      */
-    private static class Entry<K, V> extends AndroidHashMap.HashMapEntry<K, V>
+    private static class Entry<K, V> extends AndroidHashMapEntry<K, V>
     {
         AppendLinkedHashMap.Entry<K, V> ptr;
 
-        Entry(int hash, K key, V value, AndroidHashMap.HashMapEntry<K, V> next)
+        Entry(int hash, K key, V value, AndroidHashMapEntry<K, V> next)
         {
             super(key, value, hash, next);
         }
