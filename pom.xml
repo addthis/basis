@@ -34,6 +34,8 @@
   </licenses>
 
   <properties>
+    <!-- enforcer plugin must be explicitly enabled with -Denforcer.skip=false -->
+    <enforcer.skip>true</enforcer.skip>
   </properties>
 
   <build>
@@ -47,6 +49,7 @@
             <DependencyConvergence />
           </rules>
           <fail>true</fail>
+          <skip>${enforcer.skip}</skip>
         </configuration>
       </plugin>
     </plugins>
