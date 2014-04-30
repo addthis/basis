@@ -3,8 +3,7 @@ package com.addthis.basis.chars;
 import io.netty.buffer.ByteBufHolder;
 
 /**
- * A variation on ByteBufs for Character Strings. This variation has two
- * primary goals:
+ * A variation on ByteBufs for Character Strings. This variation has three primary goals:
  *
  * 1. Faster serialization and deserialization. Character Strings that are only
  * infrequently treated as anything more than byte sequences waste a lot of CPU
@@ -27,7 +26,16 @@ import io.netty.buffer.ByteBufHolder;
  * 2. Reduced memory overhead. Standard java char types are 16 bits, but for the common case
  * of all or mostly ASCII characters, this is twice (or near that) as much memory as needed.
  *
+ * 3. More flexible char[] semantics similar to the difference between byte[]s and ByteBufs. Eg. decreasing
+ * the number of readable values is possible as a constant time operation without creating a new array.
+ * String itself is also really, deeply, into making char[] copies. See AsciiSequence.toString() for
+ * an example of easy it can be to accidentally make lots of array copies, and how hard it is to avoid even
+ * when you are trying to. (in hydra, AbstractBufferingHttpBundleEncoder ran into a similar issue where it
+ * was mistakenly creating an unnecessary copy).
+ *
+ * * * *
  * Secondary goals/ benefits:
+ * * * *
  *
  * - Specializing in one encoding with one backing structure allows for much more efficient
  * encode and decode methods than those in the standard library due to abstraction limitations.
@@ -45,11 +53,6 @@ import io.netty.buffer.ByteBufHolder;
  * detection.
  *
  * - Using ByteBufs directly makes integration with other ByteBuf based IO easy and efficient.
- *
- * - More flexible char[] semantics similar to the difference between byte[]s and ByteBufs. Eg. decreasing
- * the number of readable values is possible as a constant time operation without creating a new array.
- * StringBuilder actually does this pretty decently, but this implementation will give us a little more
- * flexibility.
  *
  * This interface combines several related ones and additionally imposes the following contracts:
  *
