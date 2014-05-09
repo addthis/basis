@@ -1,7 +1,5 @@
 package com.addthis.basis.chars;
 
-import io.netty.buffer.ByteBufHolder;
-
 /**
  * A variation on ByteBufs for Character Strings. This variation has three primary goals:
  *
@@ -89,7 +87,7 @@ import io.netty.buffer.ByteBufHolder;
  *
  * Maybe add Iteratable Character, or primitive equivalent?
  */
-public interface CharBuf extends CharSequence, Appendable, Comparable<CharBuf>, ByteBufHolder {
+public interface CharBuf extends ReadableCharBuf, Appendable {
 
     /**
      * Return value should be consistent across CharBuf implementations for the
@@ -104,11 +102,5 @@ public interface CharBuf extends CharSequence, Appendable, Comparable<CharBuf>, 
      */
     @Override
     public boolean equals(Object obj);
-
-    /**
-     * Should perform lexicographical comparison.
-     */
-    @Override
-    public int compareTo(CharBuf o);
 
 }

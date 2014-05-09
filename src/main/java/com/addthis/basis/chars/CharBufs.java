@@ -25,7 +25,7 @@ public final class CharBufs {
 
     public static CharBuf ascii(CharSequence charSequence) {
         ByteBuf data = ByteBufAllocator.DEFAULT.buffer(charSequence.length());
-        CharBuf charBuf = new AsciiSequence(data);
+        CharBuf charBuf = new AsciiBuf(data);
         try {
             charBuf.append(charSequence);
         } catch (IOException iox) {
@@ -43,7 +43,7 @@ public final class CharBufs {
             }
             data.writeByte((byte) c);
         }
-        return new AsciiSequence(data, false);
+        return new AsciiBuf(data, false);
     }
 
     public static CharBuf ascii(char[] values) {

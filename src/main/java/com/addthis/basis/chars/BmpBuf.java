@@ -58,9 +58,9 @@ import io.netty.buffer.DefaultByteBufHolder;
  *      is > some value and/ or percentage where it is just worse than 'all double-byte'
  *
  */
-public abstract class BmpSequence extends DefaultByteBufHolder implements CharBuf {
+public abstract class BmpBuf extends DefaultByteBufHolder implements CharBuf {
 
-    public BmpSequence(ByteBuf data) {
+    public BmpBuf(ByteBuf data) {
         super(data);
         if (!validate()) {
             throw new RuntimeException(new UnmappableCharacterException(2));
@@ -117,7 +117,7 @@ public abstract class BmpSequence extends DefaultByteBufHolder implements CharBu
     }
 
     @Override
-    public int compareTo(CharBuf o) {
+    public int compareTo(ReadableCharBuf o) {
         return ByteBufUtil.compare(o.content(), content());
     }
 }

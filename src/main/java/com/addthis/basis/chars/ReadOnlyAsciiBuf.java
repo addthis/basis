@@ -1,12 +1,6 @@
 package com.addthis.basis.chars;
 
-import java.io.IOException;
-
-import java.nio.charset.UnmappableCharacterException;
-
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
-import io.netty.buffer.DefaultByteBufHolder;
 
 /**
  * A CharSequence backed by a ByteBuf instead of a String. This
@@ -38,22 +32,18 @@ import io.netty.buffer.DefaultByteBufHolder;
  * characters into their plain ascii counterparts and b) replacing with '?' or
  * ' ' and the like.
  */
-public class AsciiSequence extends DefaultByteBufHolder implements CharBuf {
+public class ReadOnlyAsciiBuf extends AbstractReadOnlyCharBuf {
 
-    public AsciiSequence(ByteBuf data) {
-        super(data);
-        if (!validate()) {
-            throw new RuntimeException(new UnmappableCharacterException(2));
-        }
-    }
-
-    // package-private constructor that skips validation
-    AsciiSequence(ByteBuf data, boolean validate) {
+    public ReadOnlyAsciiBuf(ByteBuf data) {
         super(data);
     }
 
-    public AsciiSequence(CharBuf charBuf) {
-        this(charBuf.content());
+    public ReadOnlyAsciiBuf(ByteBuf data, boolean validate) {
+        super(data, validate);
+    }
+
+    public ReadOnlyAsciiBuf(CharBuf charBuf) {
+        super(charBuf);
     }
 
     /**
@@ -61,42 +51,10 @@ public class AsciiSequence extends DefaultByteBufHolder implements CharBuf {
      * and untrusted constructors.
      * @return true if valid
      */
-    boolean validate() {
+    @Override
+    protected boolean validate() {
         int indexOf = content().forEachByte(CharBufs.FIND_NEGATIVE);
         return indexOf == -1;
-    }
-
-    @Override
-    public Appendable append(CharSequence csq) throws IOException {
-        return append(csq, 0, csq.length());
-    }
-
-    @Override
-    public Appendable append(CharSequence csq, int start, int end) throws IOException {
-        if (csq.length() < end) {
-            throw new IndexOutOfBoundsException();
-        }
-        if (csq instanceof AsciiSequence) {
-            content().writeBytes(((AsciiSequence) csq).content());
-        } else {
-            for (int i = start; i < end; i++) {
-                char c =  csq.charAt(i);
-                if (c >= '\u0080') {
-                    throw new UnmappableCharacterException(2);
-                }
-                content().writeByte((byte) c);
-            }
-        }
-        return this;
-    }
-
-    @Override
-    public Appendable append(char c) throws IOException {
-        if (c >= '\u0080') {
-            throw new UnmappableCharacterException(2);
-        }
-        content().writeByte((byte) c);
-        return this;
     }
 
     @Override
@@ -111,7 +69,7 @@ public class AsciiSequence extends DefaultByteBufHolder implements CharBuf {
 
     @Override
     public CharSequence subSequence(int start, int end) {
-        return new AsciiSequence(content().slice(start, end));
+        return new ReadOnlyAsciiBuf(content().slice(start, end));
     }
 
     @Override
@@ -151,21 +109,5 @@ public class AsciiSequence extends DefaultByteBufHolder implements CharBuf {
             }
         }
         return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj instanceof CharBuf) {
-            return ByteBufUtil.equals(((CharBuf) obj).content(), content());
-        }
-        return false;
-    }
-
-    @Override
-    public int compareTo(CharBuf o) {
-        return ByteBufUtil.compare(o.content(), content());
     }
 }
