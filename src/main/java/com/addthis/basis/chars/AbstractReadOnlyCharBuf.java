@@ -44,8 +44,8 @@ public abstract class AbstractReadOnlyCharBuf extends DefaultByteBufHolder imple
         if (obj == this) {
             return true;
         }
-        if (obj instanceof CharBuf) {
-            return ByteBufUtil.equals(((CharBuf) obj).content(), content());
+        if (obj instanceof ReadableCharBuf) {
+            return ByteBufUtil.equals(((ReadableCharBuf) obj).content(), content());
         }
         return false;
     }
