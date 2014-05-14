@@ -18,7 +18,7 @@ import static com.addthis.basis.chars.AbstractReadOnlyUtfBuf.packIndexCache;
 public class SharedCacheTests {
 
     private static int packAndCheck(int chars, int bytes) {
-        int cache = packIndexCache((short) chars, (short) bytes);
+        int cache = packIndexCache((short) chars, bytes);
         Assert.assertEquals(chars, cacheCharDelta(cache));
         Assert.assertEquals(bytes, cacheByteIndex(cache));
         return cache;

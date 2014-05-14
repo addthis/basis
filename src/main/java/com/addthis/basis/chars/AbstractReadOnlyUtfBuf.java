@@ -49,14 +49,14 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
     }
 
     // lower half of packedIndexCache; must use a locally stored copy of the cache value to be thread safe
-    protected static short cacheByteIndex(int cacheInstance) {
-        return (short) cacheInstance;
+    protected static int cacheByteIndex(int cacheInstance) {
+        return 0xFFFF & cacheInstance;
     }
 
-    protected static int packIndexCache(short charDelta, short byteIndex) {
+    protected static int packIndexCache(short charDelta, int byteIndex) {
         int newCache = (int) charDelta;
         newCache <<= 16;
-        newCache |= (int) byteIndex;
+        newCache |= byteIndex;
         return newCache;
     }
 
@@ -70,7 +70,7 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
             return false;
         }
         // see if the index is the end of the byte array
-        return (short) cacheInstance == _getByteLength();
+        return (0xFFFF & cacheInstance) == _getByteLength();
     }
 
     // get arbitrary byte from backing byte store
@@ -111,7 +111,7 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
             }
         }
         if (_getByteLength() <= MAX_USHORT) {
-            packedIndexCache = packIndexCache(charDelta, (short) _getByteLength());
+            packedIndexCache = packIndexCache(charDelta, _getByteLength());
         }
         return charIndex(charDelta, byteIndex);
     }
@@ -178,7 +178,7 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
         }
         int endByte = byteIndex;
         if (byteIndex <= MAX_USHORT) {
-            packedIndexCache = packIndexCache(charDelta, (short) byteIndex);
+            packedIndexCache = packIndexCache(charDelta, byteIndex);
         }
         return _getSubSequenceForByteBounds(startByte, endByte);
     }
@@ -267,7 +267,7 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
             out = (char) b;
         }
         if (byteIndex <= MAX_USHORT) {
-            packedIndexCache = packIndexCache(charDelta, (short) byteIndex);
+            packedIndexCache = packIndexCache(charDelta, byteIndex);
         }
         return out;
     }

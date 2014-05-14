@@ -32,6 +32,7 @@ public class CUID {
      * @return 128-bit random string in the specified base as two 64-bit 0-padded strings
      * @deprecated - we now use CUIDs
      */
+    @Deprecated
     public static String createGUID(int base) {
         return Numbers.nextLong(base) + Numbers.nextLong(base);
     }
@@ -42,6 +43,7 @@ public class CUID {
      * @return 128-bit random string in the MAX base as two 64-bit 0-padded strings
      * @deprecated - we now use CUIDs
      */
+    @Deprecated
     public static String createGUID() {
         return createGUID(Numbers.MAX_BASE);
     }
