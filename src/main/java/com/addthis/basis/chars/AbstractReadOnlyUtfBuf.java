@@ -1,5 +1,7 @@
 package com.addthis.basis.chars;
 
+import com.google.common.base.Objects;
+
 /**
  * A CharSequence backed by utf-8 bytes instead of java chars (ie. utf-16 bytes)
  */
@@ -171,6 +173,7 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
             // TODO: reverse scanning from index if guessed to be faster
             charDelta = 0;
             byteIndex = 0;
+            charIndex = 0;
         }
         // TODO: more branch reduction optimization?
         // TODO: 4 byte -> Utf-16 surrogate pairs for java nonsense
@@ -233,4 +236,14 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
         }
         return hash;
     }
+
+    public String toDebugString() {
+        int cacheInstance = packedIndexCache;
+        return Objects.toStringHelper(this)
+                .add("byteLength", _getByteLength())
+                .add("byteIndex", cacheByteIndex(cacheInstance))
+                .add("charDelta", cacheCharDelta(cacheInstance))
+                .toString();
+    }
+
 }
