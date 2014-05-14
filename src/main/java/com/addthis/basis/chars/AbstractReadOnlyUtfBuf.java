@@ -98,9 +98,12 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
         for (; byteIndex < _getByteLength(); byteIndex++) {
             byte b = _getByte(byteIndex);
             if (b < 0) {
-                int continuations = 1;
+                // check four-byte first for the over-zealous branch removal strategy
+                int continuations = ((int) b & Utf8.FOUR_BYTE_MASK) >> Utf8.FOUR_BYTE_SHIFT;
+                charDelta += continuations; // reverse later substraction
                 continuations += ((int) b & Utf8.THREE_BYTE_MASK) >> Utf8.THREE_BYTE_SHIFT;
-                continuations += ((int) b & Utf8.FOUR_BYTE_MASK) >> Utf8.FOUR_BYTE_MASK;
+                // always at least two bytes here; we could just use the cont. mask to remove all branches but...
+                continuations += 1;
                 charDelta -= continuations;
                 byteIndex += continuations;
             }
@@ -133,13 +136,20 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
             byteIndex += 1;
             // assume well formed and valid index, so all negatives are seq headers
             if (b < 0) {
-                // always at least two bytes here; we could just use the cont. mask to remove all branches but...
-                int continuations = 1;
+                // check four-byte first for the over-zealous branch removal strategy
+                int continuations = ((int) b & Utf8.FOUR_BYTE_MASK) >> Utf8.FOUR_BYTE_SHIFT;
+                charIndex += continuations;
+                charDelta += continuations; // reverse later substraction
                 continuations += ((int) b & Utf8.THREE_BYTE_MASK) >> Utf8.THREE_BYTE_SHIFT;
-                continuations += ((int) b & Utf8.FOUR_BYTE_MASK) >> Utf8.FOUR_BYTE_MASK;
+                // always at least two bytes here; we could just use the cont. mask to remove all branches but...
+                continuations += 1;
                 charDelta -= continuations;
                 byteIndex += continuations;
             }
+        }
+        // check to see if we would 'split in half' a surrogate pair -- if java won't stop this madness, we will
+        if (charIndex > start) {
+            throw new IllegalArgumentException("first character of the requested subsequence is a low-surrogate");
         }
         int startByte = byteIndex;
         for (; (charIndex < end) && (byteIndex < _getByteLength()); charIndex++) {
@@ -147,13 +157,20 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
             byteIndex += 1;
             // assume well formed and valid index, so all negatives are seq headers
             if (b < 0) {
-                // always at least two bytes here; we could just use the cont. mask to remove all branches but...
-                int continuations = 1;
+                // check four-byte first for the over-zealous branch removal strategy
+                int continuations = ((int) b & Utf8.FOUR_BYTE_MASK) >> Utf8.FOUR_BYTE_SHIFT;
+                charIndex += continuations;
+                charDelta += continuations; // reverse later substraction
                 continuations += ((int) b & Utf8.THREE_BYTE_MASK) >> Utf8.THREE_BYTE_SHIFT;
-                continuations += ((int) b & Utf8.FOUR_BYTE_MASK) >> Utf8.FOUR_BYTE_MASK;
+                // always at least two bytes here; we could just use the cont. mask to remove all branches but...
+                continuations += 1;
                 charDelta -= continuations;
                 byteIndex += continuations;
             }
+        }
+        // check to see if we would 'split in half' a surrogate pair -- if java won't stop this madness, we will
+        if (charIndex > end) {
+            throw new IllegalArgumentException("last character of the requested subsequence is a high-surrogate");
         }
         int endByte = byteIndex;
         return _getSubSequenceForByteBounds(startByte, endByte);
@@ -183,13 +200,21 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
             byteIndex += 1;
             // assume well formed and valid index, so all negatives are seq headers
             if (b < 0) {
-                // always at least two bytes here; we could just use the cont. mask to remove all branches but...
-                int continuations = 1;
+                // check four-byte first for the over-zealous branch removal strategy
+                int continuations = ((int) b & Utf8.FOUR_BYTE_MASK) >> Utf8.FOUR_BYTE_SHIFT;
+                charIndex += continuations;
+                charDelta += continuations; // reverse later substraction
                 continuations += ((int) b & Utf8.THREE_BYTE_MASK) >> Utf8.THREE_BYTE_SHIFT;
-                continuations += ((int) b & Utf8.FOUR_BYTE_MASK) >> Utf8.FOUR_BYTE_MASK;
+                // always at least two bytes here; we could just use the cont. mask to remove all branches but...
+                continuations += 1;
                 charDelta -= continuations;
                 byteIndex += continuations;
             }
+        }
+        // check to see if we were asked for a low-surrogate; if so we just passed the four-byter and must rewind
+        if (charIndex > index) {
+            byteIndex -= 4;
+            charDelta += 3;
         }
         // return next char
         byte b = _getByte(byteIndex);
@@ -203,7 +228,7 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
                 out |= (char) (b2 & Utf8.CONTINUATION_MASK);
                 charDelta -= 1;
                 byteIndex += 1;
-            } else { // three-bytes; for now, screw four-bytes
+            } else if (b < Utf8.MIN_FOUR_HEADER) { // three-bytes
                 out = (char) ((b & Utf8.THREE_BYTE_HEADER_MASK) << (6 + 6));
                 byte b2 = _getByte(byteIndex);
                 byteIndex += 1;
@@ -212,6 +237,24 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
                 byteIndex += 1;
                 out |= (char) (b3 & Utf8.CONTINUATION_MASK);
                 charDelta -= 2;
+            } else { // four-bytes
+                int codePoint = (b & Utf8.FOUR_BYTE_HEADER_MASK) << (6 + 6 + 6);
+                byte b2 = _getByte(byteIndex);
+                byteIndex += 1;
+                codePoint |= (b2 & Utf8.CONTINUATION_MASK) << (6 + 6);
+                byte b3 = _getByte(byteIndex);
+                byteIndex += 1;
+                codePoint |= (b3 & Utf8.CONTINUATION_MASK) << 6;
+                byte b4 = _getByte(byteIndex);
+                byteIndex += 1;
+                codePoint |= b4 & Utf8.CONTINUATION_MASK;
+                charDelta -= 2;
+                // high or low surrogate -- uses same logic from earlier
+                if (charIndex > index) {
+                    out = Character.lowSurrogate(codePoint);
+                } else {
+                    out = Character.highSurrogate(codePoint);
+                }
             }
         } else {
             out = (char) b;
