@@ -32,44 +32,52 @@ import io.netty.buffer.ByteBuf;
  * characters into their plain ascii counterparts and b) replacing with '?' or
  * ' ' and the like.
  */
-public class ReadOnlyAsciiBuf extends AbstractReadOnlyCharBuf {
+public class ReadOnlyAsciiBuf extends ReadOnlyUtfBuf {
 
     public ReadOnlyAsciiBuf(ByteBuf data) {
         super(data);
-    }
-
-    public ReadOnlyAsciiBuf(ByteBuf data, boolean validate) {
-        super(data, validate);
     }
 
     public ReadOnlyAsciiBuf(CharBuf charBuf) {
         super(charBuf);
     }
 
-    /**
-     * Searches the current underlying data for erroneous values. Useful for testing
-     * and untrusted constructors.
-     * @return true if valid
-     */
     @Override
-    protected boolean validate() {
-        int indexOf = content().forEachByte(CharBufs.FIND_NEGATIVE);
-        return indexOf == -1;
+    protected boolean knownAsciiOnly(int cacheInstance) {
+        return true;
     }
 
     @Override
     public int length() {
-        return content().readableBytes();
+        return _getByteLength();
     }
 
     @Override
     public char charAt(int index) {
-        return (char) content().getByte(index);
+        return (char) _getByte(index);
     }
 
+    // start is inclusive, end is exclusive
     @Override
     public CharSequence subSequence(int start, int end) {
-        return new ReadOnlyAsciiBuf(content().slice(start, end));
+        return _getSubSequenceForByteBounds(start, end);
+    }
+
+    /**
+     * Uses the cacheInstance for the hashCache (cacheHash? whichever dumb name Donnelly wanted)
+     */
+    @Override
+    public int hashCode() {
+        int hash = packedIndexCache;
+        if (hash == 0) {
+            int length = length();
+            for (int i = 0; i < length; i++) {
+                char c = charAt(i);
+                hash = 31 * hash + c;
+            }
+            packedIndexCache = hash;
+        }
+        return hash;
     }
 
     @Override
@@ -92,22 +100,5 @@ public class ReadOnlyAsciiBuf extends AbstractReadOnlyCharBuf {
             return "";
         }
         return new String(values);
-    }
-
-    /**
-     * Should be the same hash as that of a String representing the same
-     * sequence of characters. This hash code is _not_ cached (for now).
-     * It should be trivial to subclass and implement if really needed.
-     */
-    @Override
-    public int hashCode() {
-        ByteBuf slice = content().slice();
-        int hash = 0;
-        if (slice.readableBytes() > 0) {
-            for (int i = 0; i < slice.capacity(); i++) {
-                hash = 31 * hash + slice.getByte(i);
-            }
-        }
-        return hash;
     }
 }

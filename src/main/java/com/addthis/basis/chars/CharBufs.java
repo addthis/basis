@@ -3,16 +3,26 @@ package com.addthis.basis.chars;
 import java.io.IOException;
 
 import java.nio.CharBuffer;
-import java.nio.charset.Charset;
 import java.nio.charset.UnmappableCharacterException;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.ByteBufHolder;
 import io.netty.buffer.ByteBufProcessor;
 
 public final class CharBufs {
 
-    public static final Charset UTF8 = Charset.forName("UTF-8");
+    public static CharSequence readUtf(byte[] bytes) {
+        return new ByteArrayReadOnlyUtfBuf(bytes);
+    }
+
+    public static CharSequence readUtf(ByteBuf bytes) {
+        return new ReadOnlyUtfBuf(bytes);
+    }
+
+    public static CharSequence readUtf(ByteBufHolder byteHolder) {
+        return new ReadOnlyUtfBuf(byteHolder.content());
+    }
 
     public static CharBuf ascii(CharBuffer charBuffer) {
         if (charBuffer.hasArray()) {
@@ -43,7 +53,7 @@ public final class CharBufs {
             }
             data.writeByte((byte) c);
         }
-        return new AsciiBuf(data, false);
+        return new AsciiBuf(data);
     }
 
     public static CharBuf ascii(char[] values) {

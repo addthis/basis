@@ -39,6 +39,8 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
     // 'final' subclass for maximum safe-string-replacing semantics.
     protected int packedIndexCache;
 
+    protected static final int MAX_USHORT = 65535;
+
     // upper half of packedIndexCache; must use a locally stored copy of the cache value to be thread safe
     // it is a negative value counting down from zero. this lets us do lazier ascii purity queries/ adds
     // nb. it is okay to invert before shifting, but not okay to add due to packed short interactions
@@ -108,7 +110,9 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
                 byteIndex += continuations;
             }
         }
-        packedIndexCache = packIndexCache(charDelta, (short) _getByteLength());
+        if (_getByteLength() <= MAX_USHORT) {
+            packedIndexCache = packIndexCache(charDelta, (short) _getByteLength());
+        }
         return charIndex(charDelta, byteIndex);
     }
 
@@ -173,6 +177,9 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
             throw new IllegalArgumentException("last character of the requested subsequence is a high-surrogate");
         }
         int endByte = byteIndex;
+        if (byteIndex <= MAX_USHORT) {
+            packedIndexCache = packIndexCache(charDelta, (short) byteIndex);
+        }
         return _getSubSequenceForByteBounds(startByte, endByte);
     }
 
@@ -259,7 +266,9 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
         } else {
             out = (char) b;
         }
-        packedIndexCache = packIndexCache(charDelta, (short) byteIndex);
+        if (byteIndex <= MAX_USHORT) {
+            packedIndexCache = packIndexCache(charDelta, (short) byteIndex);
+        }
         return out;
     }
 

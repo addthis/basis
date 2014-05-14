@@ -26,6 +26,19 @@ public class ReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf implements ReadableCh
         this.data = data;
     }
 
+    // these two are intended to allow for propagating cache metadata to derived buffers
+    ReadOnlyUtfBuf(ByteBuf data, int cacheInstance) {
+        if (data == null) {
+            throw new NullPointerException("data");
+        }
+        this.data = data;
+        this.packedIndexCache = cacheInstance;
+    }
+
+    ReadOnlyUtfBuf(ByteBuf data, short charDelta, short byteIndex) {
+        this(data, packIndexCache(charDelta, byteIndex));
+    }
+
     public ReadOnlyUtfBuf(CharBuf charBuf) {
         this(charBuf.content());
     }

@@ -1,6 +1,14 @@
 package com.addthis.basis.chars;
 
-public abstract class AbstractReadOnlyAsciiBuf extends AbstractReadOnlyUtfBuf {
+public class ByteArrayReadOnlyAsciiBuf extends ByteArrayReadOnlyUtfBuf {
+
+    public ByteArrayReadOnlyAsciiBuf(byte[] data) {
+        super(data);
+    }
+
+    public ByteArrayReadOnlyAsciiBuf(String javaString) {
+        super(javaString);
+    }
 
     @Override
     protected boolean knownAsciiOnly(int cacheInstance) {
@@ -15,6 +23,12 @@ public abstract class AbstractReadOnlyAsciiBuf extends AbstractReadOnlyUtfBuf {
     @Override
     public char charAt(int index) {
         return (char) _getByte(index);
+    }
+
+    // start is inclusive, end is exclusive
+    @Override
+    public CharSequence subSequence(int start, int end) {
+        return _getSubSequenceForByteBounds(start, end);
     }
 
     /**

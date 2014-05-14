@@ -42,10 +42,6 @@ public class AsciiBuf extends ReadOnlyAsciiBuf implements CharBuf {
         super(data);
     }
 
-    public AsciiBuf(ByteBuf data, boolean validate) {
-        super(data, validate);
-    }
-
     public AsciiBuf(CharBuf charBuf) {
         this(charBuf.content());
     }
@@ -60,8 +56,8 @@ public class AsciiBuf extends ReadOnlyAsciiBuf implements CharBuf {
         if (csq.length() < end) {
             throw new IndexOutOfBoundsException();
         }
-        if (csq instanceof AsciiBuf) {
-            content().writeBytes(((AsciiBuf) csq).content());
+        if (csq instanceof ReadOnlyAsciiBuf) {
+            content().writeBytes(((ReadOnlyAsciiBuf) csq).content());
         } else {
             for (int i = start; i < end; i++) {
                 char c =  csq.charAt(i);
