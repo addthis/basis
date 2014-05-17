@@ -11,16 +11,16 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import static com.addthis.basis.chars.AbstractReadOnlyUtfBuf.cacheByteIndex;
-import static com.addthis.basis.chars.AbstractReadOnlyUtfBuf.cacheCharDelta;
+import static com.addthis.basis.chars.AbstractReadOnlyUtfBuf.cacheCharIndex;
+import static com.addthis.basis.chars.AbstractReadOnlyUtfBuf.cacheByteOffset;
 import static com.addthis.basis.chars.AbstractReadOnlyUtfBuf.packIndexCache;
 
 public class SharedCacheTests {
 
     private static int packAndCheck(int chars, int bytes) {
         int cache = packIndexCache((short) chars, bytes);
-        Assert.assertEquals(chars, cacheCharDelta(cache));
-        Assert.assertEquals(bytes, cacheByteIndex(cache));
+        Assert.assertEquals(chars, cacheByteOffset(cache));
+        Assert.assertEquals(bytes, cacheCharIndex(cache));
         return cache;
     }
 
