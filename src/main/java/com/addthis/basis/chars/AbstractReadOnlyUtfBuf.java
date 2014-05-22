@@ -31,35 +31,23 @@ public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
      * iterating over it via the CharSequence interface.
      *
      * The first number can only ever be negative. It is the number
-     * of bytes up to some index that do not represent ascii characters.
+     * of 'extra' bytes needed to represent all non-ascii characters.
      * We do not know the exact number of non-ascii characters since
      * each one may use a variable number of bytes. However counting
      * byte-wise allows us to know the number of charactes up to the
      * stored index, and this is the most helpful information. Since
-     * in the worst case, this negative number can be up to 75% of
-     * the byte length, we must be sure to control the maximum cache
-     * index dynamically and accordingly. We could use a positive number,
-     * and thereby have static and equal index limits, but using this
-     * scheme is beneficial in two ways for our most common ascii-only
-     * use case.
+     * in the worst case, this negative number can be up to two times
+     * the character index, we pack it into 16 bits + the negative sign
+     * bit for 17 total bits. This lets it get up to double the remaining
+     * 15 bits for the character index.
      *
-     * The second number is the byte index that the first one is defined
+     * The second number is the character index that the first one is defined
      * in reference to. If the first number is zero, then this index may
-     * be as large as Integer.MAX_VALUE. Otherwise, it is limited to the
-     * maximum unsigned short -- about 65k.
-     *
-     * other possible scheme: second number as character index, and first
-     * number as offset to get to the byte index from that character index.
-     * Reduces wasted index space(?):
-     *  eg. all two-byte chars
-     *  100 : 100 versus 100 : 200
-     *  eg. all three-byte chars
-     *  200 : 100 versus 200 : 300
-     *  all four-byte chars would be 300 : 100, but that four-byte chars
-     *  are always surrogate pairs and therefore it would be 300 : 200 in char terms
-     *  This guarantees us an at-most 2 : 1 ratio. So we could do a 16:15 bit split
-     *  in the !(ascii-only) case if we wanted to maximize the worst case and save
-     *  some dynamic bounds checks.
+     * be as large as Integer.MAX_VALUE. Otherwise, it is limited to
+     * Short.MAX_VALUE. So by taking this number, character index, and
+     * subtracting the first number, the byte offset, we end up with the
+     * character index + some positive number, which gives us the byte index
+     * the next character can be found at.
      *
      * Finally, it is protected (not private) because here there be
      * dragons and it might be helpful. Likely we will provide a
