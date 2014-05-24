@@ -1,8 +1,11 @@
 package com.addthis.basis.chars;
 
+import java.util.Arrays;
+
 import java.nio.charset.StandardCharsets;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 
 /**
@@ -33,17 +36,17 @@ public class ByteArrayReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf {
     }
 
     @Override
-    protected byte _getByte(int index) {
+    public byte getByte(int index) {
         return data[index];
     }
 
     @Override
-    protected int _getByteLength() {
+    public int getByteLength() {
         return data.length;
     }
 
     @Override
-    protected CharSequence _getSubSequenceForByteBounds(int start, int end) {
+    public ReadableCharBuf getSubSequenceForByteBounds(int start, int end) {
         int length = end - start;
         byte[] wastefulClone = new byte[length];
         System.arraycopy(data, start, wastefulClone, 0, length);
@@ -58,5 +61,18 @@ public class ByteArrayReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf {
     @Override
     public ByteBuf toByteBuf() {
         return Unpooled.wrappedBuffer(data);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj instanceof ByteArrayReadOnlyUtfBuf) {
+            return Arrays.equals(data, ((ByteArrayReadOnlyUtfBuf) obj).data);
+        } else if (obj instanceof ReadableCharBuf) {
+            return ByteBufUtil.equals(((ReadableCharBuf) obj).toByteBuf(), toByteBuf());
+        }
+        return false;
     }
 }

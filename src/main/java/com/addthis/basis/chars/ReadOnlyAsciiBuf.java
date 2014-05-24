@@ -49,18 +49,18 @@ public class ReadOnlyAsciiBuf extends ReadOnlyUtfBuf {
 
     @Override
     public int length() {
-        return _getByteLength();
+        return getByteLength();
     }
 
     @Override
     public char charAt(int index) {
-        return (char) _getByte(index);
+        return (char) getByte(index);
     }
 
     // start is inclusive, end is exclusive
     @Override
     public CharSequence subSequence(int start, int end) {
-        return _getSubSequenceForByteBounds(start, end);
+        return getSubSequenceForByteBounds(start, end);
     }
 
     /**

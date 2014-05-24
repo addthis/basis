@@ -1,7 +1,6 @@
 package com.addthis.basis.chars;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufHolder;
 
 /**
  * See the writable extension "CharBuf" for long-winded high level discussion.
@@ -42,4 +41,12 @@ public interface ReadableCharBuf extends CharSequence, Comparable<ReadableCharBu
      */
     public ByteBuf toByteBuf();
 
+    // get arbitrary byte from backing byte store
+    public abstract byte getByte(int index);
+
+    // number of bytes in backing byte store
+    public abstract int getByteLength();
+
+    // start is inclusive, end is exclusive
+    public abstract ReadableCharBuf getSubSequenceForByteBounds(int start, int end);
 }

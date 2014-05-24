@@ -44,17 +44,17 @@ public class ReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf implements ReadableCh
     }
 
     @Override
-    protected byte _getByte(int index) {
+    public byte getByte(int index) {
         return content().getByte(index);
     }
 
     @Override
-    protected int _getByteLength() {
+    public int getByteLength() {
         return content().readableBytes();
     }
 
     @Override
-    protected CharSequence _getSubSequenceForByteBounds(int start, int end) {
+    public ReadableCharBuf getSubSequenceForByteBounds(int start, int end) {
         return new ReadOnlyUtfBuf(data.slice(start, end - start));
     }
 

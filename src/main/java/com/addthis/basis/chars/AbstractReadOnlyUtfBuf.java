@@ -84,17 +84,8 @@ public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
     protected boolean knownAsciiOnly(int cacheInstance) {
         // byte lengths can't be negative so this implicitly fails non-asciis as well
         // as tests for completeness
-        return cacheInstance == _getByteLength();
+        return cacheInstance == getByteLength();
     }
-
-    // get arbitrary byte from backing byte store
-    protected abstract byte _getByte(int index);
-
-    // number of bytes in backing byte store
-    protected abstract int _getByteLength();
-
-    // start is inclusive, end is exclusive
-    protected abstract CharSequence _getSubSequenceForByteBounds(int start, int end);
 
     @Override
     public int length() {
@@ -105,13 +96,13 @@ public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
         }
         int charIndex = cacheCharIndex(cacheInstance);
         int byteOffset = cacheByteOffset(cacheInstance);
-        final int byteLength = _getByteLength();
+        final int byteLength = getByteLength();
         int byteIndex = byteIndex(byteOffset, charIndex);
         if (byteIndex == byteLength) {
             return charIndex;
         }
         for (; byteIndex < byteLength; byteIndex++) {
-            byte b = _getByte(byteIndex);
+            byte b = getByte(byteIndex);
             if (b < 0) {
                 // check four-byte first for the over-zealous branch removal strategy
                 int continuations = ((int) b & Utf8.FOUR_BYTE_MASK) >> Utf8.FOUR_BYTE_SHIFT;
@@ -133,7 +124,7 @@ public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
 
     private int tryAsciiScan(int start, int end) {
         for (int i = start; i < end; i++) {
-            byte b = _getByte(i);
+            byte b = getByte(i);
             if (b < 0) {
                 return i;
             }
@@ -152,7 +143,7 @@ public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
         // TODO: branch optimization, bounds check optimizations (maybe?)
         // scan until next character is the requested one
         for (; index.charIndex < end; index.charIndex++) {
-            byte b = _getByte(index.byteIndex);
+            byte b = getByte(index.byteIndex);
             index.byteIndex += 1;
             // assume well formed and valid index, so all negatives are seq headers
             if (b < 0) { // advance past the continuation bytes based on header meta-data
@@ -173,16 +164,16 @@ public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
     // start is inclusive, end is exclusive
     // TODO: enforce argument bounds
     @Override
-    public CharSequence subSequence(int start, int end) {
+    public ReadableCharBuf subSequence(int start, int end) {
         final int cacheInstance = packedIndexCache;
         // ascii pre-computed short circuit; end must be positive so it enforces ascii only.
         // the comparison checks if the cache knows about all the bytes up to the end index.
         if (end <= cacheInstance) {
-            return _getSubSequenceForByteBounds(start, end);
+            return getSubSequenceForByteBounds(start, end);
         } else if (cacheInstance >= 0) {
             packedIndexCache = tryAsciiScan(cacheInstance, end);
             if (end <= packedIndexCache) {
-                return _getSubSequenceForByteBounds(start, end);
+                return getSubSequenceForByteBounds(start, end);
             }
         }
         BufferIndex index = new BufferIndex(cacheInstance);
@@ -202,34 +193,34 @@ public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
             packedIndexCache = packIndexCache(index.byteOffset, index.charIndex);
         }
         int endByte = index.byteIndex;
-        return _getSubSequenceForByteBounds(startByte, endByte);
+        return getSubSequenceForByteBounds(startByte, endByte);
     }
 
     private char nextCharForBufferIndex(BufferIndex index, boolean highSurrogate) {
         index.charIndex += 1;
-        byte b = _getByte(index.byteIndex ++);
+        byte b = getByte(index.byteIndex ++);
         char out;
         if (b >= 0) { // one-byte
             out = (char) b;
         } else if (b < Utf8.MIN_THREE_HEADER) { // two-bytes
             out = (char) ((b & Utf8.TWO_BYTE_HEADER_MASK) << 6);
-            b = _getByte(index.byteIndex ++);
+            b = getByte(index.byteIndex ++);
             out |= (char) (b & Utf8.CONTINUATION_MASK);
             index.byteOffset -= 1;
         } else if (b < Utf8.MIN_FOUR_HEADER) { // three-bytes
             out = (char) ((b & Utf8.THREE_BYTE_HEADER_MASK) << (6 + 6));
-            b = _getByte(index.byteIndex ++);
+            b = getByte(index.byteIndex ++);
             out |= (char) ((b & Utf8.CONTINUATION_MASK) << 6);
-            b = _getByte(index.byteIndex ++);
+            b = getByte(index.byteIndex ++);
             out |= (char) (b & Utf8.CONTINUATION_MASK);
             index.byteOffset -= 2;
         } else { // four-bytes
             int codePoint = (b & Utf8.FOUR_BYTE_HEADER_MASK) << (6 + 6 + 6);
-            b = _getByte(index.byteIndex ++);
+            b = getByte(index.byteIndex ++);
             codePoint |= (b & Utf8.CONTINUATION_MASK) << (6 + 6);
-            b = _getByte(index.byteIndex ++);
+            b = getByte(index.byteIndex ++);
             codePoint |= (b & Utf8.CONTINUATION_MASK) << 6;
-            b = _getByte(index.byteIndex ++);
+            b = getByte(index.byteIndex ++);
             codePoint |= b & Utf8.CONTINUATION_MASK;
             // high or low surrogate
             if (highSurrogate) {
@@ -249,11 +240,11 @@ public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
     @Override
     public char charAt(int index) {
         // ascii short cuts
-        byte b = _getByte(index); // unused for non-ascii but oh well
+        byte b = getByte(index); // unused for non-ascii but oh well
         if (index < packedIndexCache) {
             return (char) b;
         } else if (packedIndexCache >= 0) {
-            packedIndexCache = tryAsciiScan(packedIndexCache, _getByteLength());
+            packedIndexCache = tryAsciiScan(packedIndexCache, getByteLength());
             if (index < packedIndexCache) {
                 return (char) b;
             }
@@ -292,7 +283,7 @@ public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
     public String toDebugString() {
         int cacheInstance = packedIndexCache;
         return Objects.toStringHelper(this)
-                .add("byteLength", _getByteLength())
+                .add("byteLength", getByteLength())
                 .add("byteIndex", cacheCharIndex(cacheInstance))
                 .add("charDelta", cacheByteOffset(cacheInstance))
                 .toString();
