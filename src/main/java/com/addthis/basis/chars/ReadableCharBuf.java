@@ -1,5 +1,6 @@
 package com.addthis.basis.chars;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
 
 /**
@@ -13,7 +14,7 @@ import io.netty.buffer.ByteBufHolder;
  *
  * TODO: ConcurrentCharBuf and/ or ImmutableCharBuf markers (interface/ abstract base) desirable?
  */
-public interface ReadableCharBuf extends CharSequence, Comparable<ReadableCharBuf>, ByteBufHolder {
+public interface ReadableCharBuf extends CharSequence, Comparable<ReadableCharBuf> {
 
     /**
      * Return value should be consistent across CharBuf implementations for the
@@ -34,5 +35,11 @@ public interface ReadableCharBuf extends CharSequence, Comparable<ReadableCharBu
      */
     @Override
     public int compareTo(ReadableCharBuf o);
+
+    /**
+     * Returns a view of this CharSequence as its backing Utf8 bytes as
+     * represented by a ByteBuf.
+     */
+    public ByteBuf toByteBuf();
 
 }

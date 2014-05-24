@@ -2,6 +2,9 @@ package com.addthis.basis.chars;
 
 import java.nio.charset.StandardCharsets;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
 /**
  * Intended for those cases where you just really can't avoid using byte[]s.
  * For instance, interacting with third parties that require, or already provide
@@ -12,7 +15,7 @@ import java.nio.charset.StandardCharsets;
  */
 public class ByteArrayReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf {
 
-    private final byte[] data;
+    protected final byte[] data;
 
     public ByteArrayReadOnlyUtfBuf(byte[] data) {
         if (data == null) {
@@ -45,5 +48,15 @@ public class ByteArrayReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf {
         byte[] wastefulClone = new byte[length];
         System.arraycopy(data, start, wastefulClone, 0, length);
         return new ByteArrayReadOnlyUtfBuf(wastefulClone);
+    }
+
+    @Override
+    public int compareTo(ReadableCharBuf o) {
+        return CharSequenceComparator.INSTANCE.compare(this, o);
+    }
+
+    @Override
+    public ByteBuf toByteBuf() {
+        return Unpooled.wrappedBuffer(data);
     }
 }

@@ -1,5 +1,7 @@
 package com.addthis.basis.chars;
 
+import io.netty.buffer.ByteBufHolder;
+
 /**
  * A variation on ByteBufs for Character Strings. This variation has three primary goals:
  *
@@ -87,7 +89,7 @@ package com.addthis.basis.chars;
  *
  * Maybe add Iteratable Character, or primitive equivalent?
  */
-public interface CharBuf extends ReadableCharBuf, Appendable {
+public interface CharBuf extends ReadableCharBuf, Appendable, ByteBufHolder {
 
     /**
      * Return value should be consistent across CharBuf implementations for the

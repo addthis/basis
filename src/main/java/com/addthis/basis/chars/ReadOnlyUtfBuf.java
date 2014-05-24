@@ -15,7 +15,7 @@ import io.netty.util.IllegalReferenceCountException;
  * we may emulate their non-sense semi-variable-width chars to
  * some extent when accessed via the CharSequence interface.
  */
-public class ReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf implements ReadableCharBuf {
+public class ReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf implements ReadableCharBuf, ByteBufHolder {
 
     private final ByteBuf data;
 
@@ -35,11 +35,11 @@ public class ReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf implements ReadableCh
         this.packedIndexCache = cacheInstance;
     }
 
-    ReadOnlyUtfBuf(ByteBuf data, short charDelta, short byteIndex) {
+    ReadOnlyUtfBuf(ByteBuf data, int charDelta, int byteIndex) {
         this(data, packIndexCache(charDelta, byteIndex));
     }
 
-    public ReadOnlyUtfBuf(CharBuf charBuf) {
+    public ReadOnlyUtfBuf(ByteBufHolder charBuf) {
         this(charBuf.content());
     }
 
@@ -65,7 +65,16 @@ public class ReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf implements ReadableCh
 
     @Override
     public int compareTo(ReadableCharBuf o) {
-        return ByteBufUtil.compare(o.content(), content());
+        if (o instanceof ReadOnlyUtfBuf) {
+            return ByteBufUtil.compare(((ReadOnlyUtfBuf) o).content(), content());
+        } else {
+            return CharSequenceComparator.INSTANCE.compare(this, o);
+        }
+    }
+
+    @Override
+    public ByteBuf toByteBuf() {
+        return content();
     }
 
     @Override
@@ -74,7 +83,7 @@ public class ReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf implements ReadableCh
             return true;
         }
         if (obj instanceof ReadableCharBuf) {
-            return ByteBufUtil.equals(((ReadableCharBuf) obj).content(), content());
+            return ByteBufUtil.equals(((ReadableCharBuf) obj).toByteBuf(), content());
         }
         return false;
     }

@@ -5,7 +5,7 @@ import com.google.common.base.Objects;
 /**
  * A CharSequence backed by utf-8 bytes instead of java chars (ie. utf-16 bytes)
  */
-public abstract class AbstractReadOnlyUtfBuf implements CharSequence {
+public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
 
     /**
      * thread-safe, lightweight, oppertunistic index cache

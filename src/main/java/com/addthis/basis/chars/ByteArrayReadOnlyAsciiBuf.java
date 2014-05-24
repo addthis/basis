@@ -32,7 +32,7 @@ public class ByteArrayReadOnlyAsciiBuf extends ByteArrayReadOnlyUtfBuf {
     }
 
     /**
-     * Uses the cacheInstance for the hashCache (cacheHash? whichever dumb name Donnelly wanted)
+     * Uses the cacheInstance for caching the hash instead
      */
     @Override
     public int hashCode() {
