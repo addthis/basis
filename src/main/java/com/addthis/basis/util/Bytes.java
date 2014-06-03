@@ -27,8 +27,9 @@ import java.util.Arrays;
 import java.nio.charset.Charset;
 
 public class Bytes {
+
     public static final Charset UTF8 = Charset.forName("UTF-8");
-    private static final byte emptyBytes[] = new byte[0];
+    private static final byte[] emptyBytes = new byte[0];
 
     /**
      * Efficiently concatenate two byte arrays into one.
@@ -37,8 +38,8 @@ public class Bytes {
      * @param b
      * @return
      */
-    public static byte[] cat(byte a[], byte b[]) {
-        byte o[] = new byte[a.length + b.length];
+    public static byte[] cat(byte[] a, byte[] b) {
+        byte[] o = new byte[a.length + b.length];
         System.arraycopy(a, 0, o, 0, a.length);
         System.arraycopy(b, 0, o, a.length, b.length);
         return o;
@@ -51,8 +52,8 @@ public class Bytes {
      * @param b
      * @return
      */
-    public static byte[] cat(byte a[], byte b[], byte c[]) {
-        byte o[] = new byte[a.length + b.length + c.length];
+    public static byte[] cat(byte[] a, byte[] b, byte[] c) {
+        byte[] o = new byte[a.length + b.length + c.length];
         System.arraycopy(a, 0, o, 0, a.length);
         System.arraycopy(b, 0, o, a.length, b.length);
         System.arraycopy(c, 0, o, a.length + b.length, c.length);
@@ -66,8 +67,8 @@ public class Bytes {
      * @param b
      * @return
      */
-    public static byte[] cat(byte a[], byte b[], byte c[], byte d[]) {
-        byte o[] = new byte[a.length + b.length + c.length + d.length];
+    public static byte[] cat(byte[] a, byte[] b, byte[] c, byte[] d) {
+        byte[] o = new byte[a.length + b.length + c.length + d.length];
         System.arraycopy(a, 0, o, 0, a.length);
         System.arraycopy(b, 0, o, a.length, b.length);
         System.arraycopy(c, 0, o, a.length + b.length, c.length);
@@ -82,8 +83,8 @@ public class Bytes {
      * @param b
      * @return
      */
-    public static byte[] cat(byte a[], byte b[], byte c[], byte d[], byte e[]) {
-        byte o[] = new byte[a.length + b.length + c.length + d.length + e.length];
+    public static byte[] cat(byte[] a, byte[] b, byte[] c, byte[] d, byte[] e) {
+        byte[] o = new byte[a.length + b.length + c.length + d.length + e.length];
         System.arraycopy(a, 0, o, 0, a.length);
         System.arraycopy(b, 0, o, a.length, b.length);
         System.arraycopy(c, 0, o, a.length + b.length, c.length);
@@ -97,14 +98,14 @@ public class Bytes {
      * example: 'string 1234 foo bar dude', '1234', 'this is a test' yields
      * returns: 'string this is a test foo bar dude'
      */
-    public static byte[] replace(byte buf[], byte pat[], byte rep[]) {
+    public static byte[] replace(byte[] buf, byte[] pat, byte[] rep) {
         int scanpos = 0;
         int startoff = 0;
         while (scanpos < buf.length) {
             if (buf[scanpos] == pat[startoff]) {
                 if (++startoff == pat.length) {
                     // replace @ scanpos - startoff
-                    byte out[] = new byte[buf.length - pat.length + rep.length];
+                    byte[] out = new byte[buf.length - pat.length + rep.length];
                     Arrays.fill(out, (byte) '-');
                     System.arraycopy(buf, 0, out, 0, scanpos - startoff + 1);
                     System.arraycopy(rep, 0, out, scanpos - startoff + 1, rep.length);
@@ -124,7 +125,7 @@ public class Bytes {
      * example: 'string 1234 foo bar dude', '1234', 'this is a test' yields
      * returns: 'string this is a testr dude'
      */
-    public static boolean overwrite(byte buf[], byte pat[], byte rep[]) {
+    public static boolean overwrite(byte[] buf, byte[] pat, byte[] rep) {
         for (int i = 0; i < buf.length; i++) {
             for (int j = 0; j < pat.length && i + j < buf.length && buf[i + j] == pat[j]; j++) {
                 if (j == pat.length - 1) {
@@ -146,7 +147,7 @@ public class Bytes {
      * @param prefix
      * @return
      */
-    public static boolean startsWith(byte data[], byte prefix[]) {
+    public static boolean startsWith(byte[] data, byte[] prefix) {
         if (data.length >= prefix.length) {
             for (int i = 0; i < prefix.length; i++) {
                 if (data[i] != prefix[i]) {
@@ -213,7 +214,7 @@ public class Bytes {
      * @return
      */
     public static byte[] toBytes(short val) {
-        byte data[] = new byte[2];
+        byte[] data = new byte[2];
         data[0] = (byte) ((val & 0xFF00) >> 8);
         data[1] = (byte) ((val & 0x00FF) >> 0);
         return data;
@@ -225,8 +226,8 @@ public class Bytes {
      * @param c
      * @return
      */
-    public static byte[] toBytes(char c[]) {
-        byte b[] = new byte[c.length * 2];
+    public static byte[] toBytes(char[] c) {
+        byte[] b = new byte[c.length * 2];
         for (int i = 0, j = 0; i < c.length; i++) {
             b[j] = (byte) ((c[i] >> 8) & 0xff);
             b[j + 1] = (byte) (c[i] & 0xff);
@@ -276,8 +277,8 @@ public class Bytes {
      * @param b
      * @return
      */
-    public static char[] toChars(byte b[]) {
-        char c[] = new char[b.length >> 1];
+    public static char[] toChars(byte[] b) {
+        char[] c = new char[b.length >> 1];
         for (int i = 0, j = 0; i < c.length; i++) {
             c[i] = (char) (((b[j++] << 8) & 0xff00) | (b[j++] & 0x00ff));
         }
@@ -301,7 +302,7 @@ public class Bytes {
      * @return
      */
     public static byte[] toBytes(int val) {
-        byte data[] = new byte[4];
+        byte[] data = new byte[4];
         data[0] = (byte) ((val & 0xFF000000) >> 24);
         data[1] = (byte) ((val & 0x00FF0000) >> 16);
         data[2] = (byte) ((val & 0x0000FF00) >> 8);
@@ -316,7 +317,7 @@ public class Bytes {
      * @return
      */
     public static byte[] toBytes(long val) {
-        byte data[] = new byte[8];
+        byte[] data = new byte[8];
         data[0] = (byte) ((val & 0xFF00000000000000L) >> 56);
         data[1] = (byte) ((val & 0x00FF000000000000L) >> 48);
         data[2] = (byte) ((val & 0x0000FF0000000000L) >> 40);
@@ -334,7 +335,7 @@ public class Bytes {
      * @param b
      * @return
      */
-    public static String toString(byte b[]) {
+    public static String toString(byte[] b) {
         return b != null ? new String(b, UTF8) : null;
     }
 
@@ -344,7 +345,7 @@ public class Bytes {
      * @param data
      * @return
      */
-    public static short toShort(byte data[]) {
+    public static short toShort(byte[] data) {
         return data != null && data.length >= 2 ?
                 (short) (
                         ((data[0] & 0xff) << 8) |
@@ -375,15 +376,15 @@ public class Bytes {
      * @param data
      * @return
      */
-    public static int toInt(byte data[]) {
+    public static int toInt(byte[] data) {
         return toInt(data, 0);
     }
 
-    public static int toInt(byte data[], int def) {
+    public static int toInt(byte[] data, int def) {
         return toInt(data, 0, def);
     }
 
-    public static int toInt(byte data[], int off, int def) {
+    public static int toInt(byte[] data, int off, int def) {
         if (data != null && data.length >= off + 4) {
             return (data[off] & 0xff) << 24 |
                     ((data[off + 1] & 0xff) << 16) |
@@ -400,15 +401,15 @@ public class Bytes {
      * @param data
      * @return
      */
-    public static long toUInt(byte data[]) {
+    public static long toUInt(byte[] data) {
         return toUInt(data, 0L);
     }
 
-    public static long toUInt(byte data[], long def) {
+    public static long toUInt(byte[] data, long def) {
         return toUInt(data, 0, def);
     }
 
-    public static long toUInt(byte data[], int off, long def) {
+    public static long toUInt(byte[] data, int off, long def) {
         if (data != null && data.length >= off + 4) {
             return (data[off] & 0xffL) << 24 |
                     ((data[off + 1] & 0xffL) << 16) |
@@ -425,15 +426,15 @@ public class Bytes {
      * @param data
      * @return
      */
-    public static long toLong(byte data[]) {
+    public static long toLong(byte[] data) {
         return toLong(data, 0L);
     }
 
-    public static long toLong(byte data[], long def) {
+    public static long toLong(byte[] data, long def) {
         return toLong(data, 0, def);
     }
 
-    public static long toLong(byte data[], int off, long def) {
+    public static long toLong(byte[] data, int off, long def) {
         if (data != null && data.length >= 8 + off) {
             return (data[off] & 0xffL) << 56 | ((data[off + 1] & 0xffL) << 48) |
                     ((data[off + 2] & 0xffL) << 40) | ((data[off + 3] & 0xffL) << 32) |
@@ -527,7 +528,7 @@ public class Bytes {
      * @param os
      * @throws IOException
      */
-    public static void writeBytes(byte b[], OutputStream os) throws IOException {
+    public static void writeBytes(byte[] b, OutputStream os) throws IOException {
         writeLength(b.length, os);
         if (b.length > 0) {
             os.write(b);
@@ -541,7 +542,7 @@ public class Bytes {
      * @param os
      * @throws IOException
      */
-    public static void writeBytes(byte b[], int off, int len, OutputStream os) throws IOException {
+    public static void writeBytes(byte[] b, int off, int len, OutputStream os) throws IOException {
         if (len > 0) {
             writeLength(len, os);
             os.write(b, off, len);
@@ -555,7 +556,7 @@ public class Bytes {
      * @param os
      * @throws IOException
      */
-    public static void writeChars(char c[], OutputStream os) throws IOException {
+    public static void writeChars(char[] c, OutputStream os) throws IOException {
         writeBytes(toBytes(c), os);
     }
 
@@ -568,7 +569,7 @@ public class Bytes {
      */
     public static byte[] readFully(InputStream in) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream(1024);
-        byte buf[] = new byte[1024];
+        byte[] buf = new byte[1024];
         int read = 0;
         while ((read = in.read(buf)) >= 0) {
             bos.write(buf, 0, read);
@@ -626,7 +627,7 @@ public class Bytes {
         if (len == 0) {
             return emptyBytes;
         }
-        byte b[] = new byte[len];
+        byte[] b = new byte[len];
         int got = 0;
         int read = 0;
         while (got < b.length && (read = in.read(b, got, b.length - got)) >= 0) {
@@ -637,7 +638,7 @@ public class Bytes {
             //          return null;
         }
         if (got < len) {
-            byte ret[] = new byte[got];
+            byte[] ret = new byte[got];
             System.arraycopy(b, 0, ret, 0, got);
             b = ret;
         }
@@ -696,12 +697,12 @@ public class Bytes {
     }
 
     public static String readString(InputStream in, boolean emptyNull) throws IOException {
-        byte b[] = readBytes(in);
+        byte[] b = readBytes(in);
         return b.length > 0 ? toString(b) : emptyNull ? null : toString(b);
     }
 
     public static String readCharString(InputStream in) throws IOException {
-        char ch[] = readChars(in);
+        char[] ch = readChars(in);
         return ch != null ? new String(ch) : null;
     }
 
@@ -713,7 +714,7 @@ public class Bytes {
                 e.printStackTrace();
             }
         }
-        byte c[] = toBytes(s);
+        byte[] c = toBytes(s);
         int vcount = 0;
         boolean plus = false;
         for (byte aC : c) {
@@ -727,7 +728,7 @@ public class Bytes {
             }
         }
         if (plus || vcount > 0) {
-            byte nc[] = new byte[c.length + (2 * vcount)];
+            byte[] nc = new byte[c.length + (2 * vcount)];
             int pos = 0;
             for (byte aC : c) {
                 if ((aC >= 'a' && aC <= 'z') || (aC >= 'A' && aC <= 'Z') || (aC >= '0' && aC <= '9') || aC == '.' || aC == '-' || aC == '*' || aC == '_') {
@@ -764,7 +765,7 @@ public class Bytes {
                 e.printStackTrace();
             }
         }
-        byte c[] = toBytes(s);
+        byte[] c = toBytes(s);
         int vcount = 0;
         boolean changed = false;
         for (int i = 0; i < c.length; i++) {
@@ -779,7 +780,7 @@ public class Bytes {
         }
         if (vcount > 0) {
             int pos = 0;
-            byte nc[] = new byte[c.length - vcount * 2];
+            byte[] nc = new byte[c.length - vcount * 2];
             for (int i = 0; i < c.length; i++) {
                 if (c[i] == '%' && i < c.length - 2) {
                     int hd1 = Bytes.hex2dec(c[i + 1]);
@@ -827,7 +828,7 @@ public class Bytes {
 
     // safety quick switch to old mode if we find problems
     private static final boolean nativeURLCodec = System.getProperty("nativeURLCodec", "1").equals("1");
-    private static final int BitReverseTable256[] =
+    private static final int[] BitReverseTable256 =
             {
                     0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0, 0x10, 0x90, 0x50, 0xD0, 0x30, 0xB0, 0x70, 0xF0,
                     0x08, 0x88, 0x48, 0xC8, 0x28, 0xA8, 0x68, 0xE8, 0x18, 0x98, 0x58, 0xD8, 0x38, 0xB8, 0x78, 0xF8,
@@ -854,7 +855,7 @@ public class Bytes {
      * @param b
      * @return
      */
-    public static int compare(byte a[], byte b[]) {
+    public static int compare(byte[] a, byte[] b) {
         for (int al = a.length, bl = b.length, i = 0; i < al; i++) {
             if (bl <= i) {
                 return 1;
@@ -875,7 +876,7 @@ public class Bytes {
      * @param b
      * @return
      */
-    public static boolean equals(byte a[], byte b[]) {
+    public static boolean equals(byte[] a, byte[] b) {
         if (a == null && b == null) {
             return true;
         }
@@ -902,8 +903,8 @@ public class Bytes {
      * @param len
      * @return
      */
-    public static byte[] cut(byte src[], int off, int len) {
-        byte ret[] = new byte[len];
+    public static byte[] cut(byte[] src, int off, int len) {
+        byte[] ret = new byte[len];
         System.arraycopy(src, off, ret, 0, len);
         return ret;
     }
@@ -940,7 +941,7 @@ public class Bytes {
      * @return String of the same length containing only supplied char
      */
     public static String clear(String s, char ch) {
-        char c[] = s.toCharArray();
+        char[] c = s.toCharArray();
         for (int i = 0; i < c.length; i++) {
             c[i] = ch;
         }
@@ -956,6 +957,4 @@ public class Bytes {
             return sval;
         }
     }
-
-
 }
