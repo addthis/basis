@@ -25,10 +25,13 @@ import java.net.URLEncoder;
 import java.util.Arrays;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class Bytes {
 
-    public static final Charset UTF8 = Charset.forName("UTF-8");
+    @Deprecated
+    public static final Charset UTF8 = StandardCharsets.UTF_8;
+
     private static final byte[] emptyBytes = new byte[0];
 
     /**
