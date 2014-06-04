@@ -979,8 +979,6 @@ public final class Bytes {
         return -1;
     }
 
-
-
     /**
      * Reverse the bits in an integer. Exactly the same as calling
      * {@link Integer#reverse(int)}, but faster. The trade-off here
