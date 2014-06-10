@@ -41,7 +41,7 @@ public class ByteArrayReadOnlyAsciiBuf extends ByteArrayReadOnlyUtfBuf {
 
     // start is inclusive, end is exclusive
     @Override
-    public CharSequence subSequence(int start, int end) {
+    public ReadableCharBuf subSequence(int start, int end) {
         return getSubSequenceForByteBounds(start, end);
     }
 
