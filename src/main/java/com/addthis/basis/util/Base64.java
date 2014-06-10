@@ -50,11 +50,11 @@ public class Base64 {
      * @return A character array with the Base64 encoded data.
      */
     public static char[] encode(byte[] in) {
-        return Bytes.toChars(base64.encode(in));
+        return base64.encode(in).toCharArray();
     }
 
     public static char[] encodeURLSafe(byte[] in) {
-        return Bytes.toChars(base64Url.encode(in));
+        return base64Url.encode(in).toCharArray();
     }
 
 

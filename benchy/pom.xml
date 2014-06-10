@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <description>template-like mini-module for benchmarking</description>
+  <!--it should suffice to only change these three settings when re-using this pom-->
+  <groupId>com.addthis</groupId>
+  <version>2.2.3-SNAPSHOT</version>
+  <properties>
+    <benchy.artifactId>basis</benchy.artifactId>
+  </properties>
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>jar-pom</artifactId>
+    <groupId>com.addthis.common.build.maven.pom</groupId>
+    <version>3.1.0</version>
+    <!--setting the relativePath to nothing quiets a spurious warning when put in a subdirectory-->
+    <relativePath/>
+  </parent>
+
+  <!--could be "${bench.artifactId}-benchy", but maven was complaining and it hardly matters-->
+  <artifactId>benchy</artifactId>
+  <packaging>jar</packaging>
+
+  <dependencies>
+    <!--depend on the project in question so that it can be used in benchmarks-->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>${benchy.artifactId}</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!--jmh is our benchmarking harness of choice-->
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-core</artifactId>
+      <version>0.9</version>
+    </dependency>
+    <!--additional, required jmh dependency-->
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-generator-annprocess</artifactId>
+      <version>0.9</version>
+      <scope>provided</scope>
+    </dependency>
+    <!--java object layout; good for checking in-memory representations and efficiency-->
+    <dependency>
+      <groupId>org.openjdk.jol</groupId>
+      <artifactId>jol-core</artifactId>
+      <version>0.1</version>
+    </dependency>
+    <!--probably won't need this slf4j implementation, but can be convenient anyway-->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>${dep.slf4j.version}</version>
+    </dependency>
+  </dependencies>
+
+  <!--taken from the jmh archetype; creates the microbenchmarks.jar, sets the Main class and ???-->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <finalName>microbenchmarks</finalName>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>org.openjdk.jmh.Main</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
