@@ -47,7 +47,15 @@ import org.openjdk.jmh.annotations.Warmup;
 @State(Scope.Thread) // treat this enclosing class as a State object that can be used in tests
 public class BitReversals {
 
+    /** our only actual state is this int we will increment to provide a bit of input variety */
     int inty = 0;
+
+    /**
+     * Each method marked with @Benchmark becomes a separate benchmark with its own warm ups,
+     * measurements, forks, threads, and states. The static methods could be inlined -- the
+     * extra method call in the first two would likely be inlined by the jit near instantly
+     * anyway. However, this was easier to test and organize at the time.
+     */
 
     @Benchmark
     public int reverseJdk() {
