@@ -3,12 +3,12 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-  <description>templated mini-module for benchmarking</description>
+  <description>template-like mini-module for benchmarking</description>
   <!--it should suffice to only change these three settings when re-using this pom-->
   <groupId>com.addthis</groupId>
   <version>2.2.3-SNAPSHOT</version>
   <properties>
-    <bench.artifactId>basis</bench.artifactId>
+    <benchy.artifactId>basis</benchy.artifactId>
   </properties>
 
   <modelVersion>4.0.0</modelVersion>
@@ -21,15 +21,15 @@
     <relativePath/>
   </parent>
 
-  <!--could be "${bench.artifactId}-bench", but maven was complaining and it hardly matters-->
-  <artifactId>bench</artifactId>
+  <!--could be "${bench.artifactId}-benchy", but maven was complaining and it hardly matters-->
+  <artifactId>benchy</artifactId>
   <packaging>jar</packaging>
 
   <dependencies>
     <!--depend on the project in question so that it can be used in benchmarks-->
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>${bench.artifactId}</artifactId>
+      <artifactId>${benchy.artifactId}</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!--jmh is our benchmarking harness of choice-->
