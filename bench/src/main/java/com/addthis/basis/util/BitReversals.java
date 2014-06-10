@@ -27,6 +27,10 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 /**
  * Simple benchmark that mostly serves as an example. It measures the throughput of several possible
@@ -37,9 +41,6 @@ import org.openjdk.jmh.annotations.Warmup;
  * of the other methods that do not impose ambiguous memory costs also perform better. This is an
  * operation that already performs insanely fast, but it is a good lesson in unexpected performance
  * properties.
- *
- * To run this benchmark, do 'mvn clean package' from the bench directory, and then run
- * 'java -jar target/microbenchmarks.jar ".*BitReversals.*"'
  */
 @BenchmarkMode(Mode.Throughput) // measure as ops/ time_unit
 @OutputTimeUnit(TimeUnit.MICROSECONDS) // time_unit is microseconds
@@ -49,6 +50,23 @@ import org.openjdk.jmh.annotations.Warmup;
 @Threads(1) // how many threads to run concurrently; thread count is per test -- not shared
 @State(Scope.Thread) // treat this enclosing class as a State object that can be used in tests
 public class BitReversals {
+
+    /**
+     * To run this benchmark, do 'mvn clean package' from the bench directory, and then either
+     *
+     * use the default JMH main class (it takes a regex of benchmark names):
+     * 'java -jar target/microbenchmarks.jar ".*BitReversals.*"'
+     *
+     * call this main method instead or use the code therein to start it programmatically
+     * eg. 'java -cp target/microbenchmarks.jar com.addthis.basis.util.BitReversals'
+     */
+    public static void main(String[] args) throws RunnerException {
+        Options opt = new OptionsBuilder()
+                .include(".*" + BitReversals.class.getSimpleName() + ".*")
+                .build();
+
+        new Runner(opt).run();
+    }
 
     /** our only actual state is this int we will increment to provide a bit of input variety */
     int inty = 0;
