@@ -37,6 +37,9 @@ import org.openjdk.jmh.annotations.Warmup;
  * of the other methods that do not impose ambiguous memory costs also perform better. This is an
  * operation that already performs insanely fast, but it is a good lesson in unexpected performance
  * properties.
+ *
+ * To run this benchmark, do 'mvn clean package' from the bench directory, and then run
+ * 'java -jar target/microbenchmarks.jar ".*BitReversals.*"'
  */
 @BenchmarkMode(Mode.Throughput) // measure as ops/ time_unit
 @OutputTimeUnit(TimeUnit.MICROSECONDS) // time_unit is microseconds
