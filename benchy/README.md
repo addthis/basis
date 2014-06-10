@@ -9,9 +9,16 @@ to let you easily create and maintain benchmarks/ tests using
 
 ## Building
 
-You must build the enclosing project first, or otherwise ensure that the version
+You must build/ install the enclosing project first, or otherwise ensure that the version
 `benchy` refers to is correct and available. Then run `mvn clean package` from the
-base of the benchy subdirectory.
+base of the benchy subdirectory. eg. from the benchy root directory:
+
+```bash
+cd ..
+mvn clean install
+cd benchy
+mvn clean package
+```
 
 ## Use
 
