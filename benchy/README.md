@@ -27,7 +27,18 @@ run individual benchmarks, `java -jar target/microbenchmarks.jar <regex>` will r
 all benchmarks matching the given regex. Otherwise, see the comments in individual
 benchmarks or use the programmatic jmh api (outside the scope of this readme).
 
-See the links provided at the top for JMH and JOL for details and additional links to
+jmh is a benchmarking harness that provides tools to prevent and/ or account for
+jvm/ jit optimizations -- eg. dead code elimination that naive benchmarks frequently encounter.
+It has most of the usual niceties as well, so it is pretty okay once you get past the initial
+learning curve.
+
+jol is a tool for analyzing the in-memory representation for objects. It can sometimes
+reveal fun jvm inefficiencies like byte alignment padding -- wasted heap space that
+inflates your class's actual size. The good news is that sometimes you can move things
+around to reclaim that space, and even if not, knowing you have x "free" bytes to spend
+can help you make informed decisions about space trade-offs.
+
+See the links provided at the top for jmh and jol for details and additional links to
 examples on how to use them.
 
 `benchy` is not intended be published to maven central or other repositories and is mainly
