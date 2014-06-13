@@ -14,6 +14,12 @@
 
 package com.addthis.basis.chars;
 
+import com.google.common.annotations.Beta;
+
+/**
+ * Utf8 utility class.
+ */
+@Beta
 public class Utf8 {
 
     // 110xxx1x; anything more negative cannot be sequence start (eg. 10xxxxxx)
@@ -36,5 +42,4 @@ public class Utf8 {
     public static final byte TWO_BYTE_HEADER_MASK = (byte) 0x1F;
     public static final byte THREE_BYTE_HEADER_MASK = (byte) 0x0F;
     public static final byte FOUR_BYTE_HEADER_MASK = (byte) 0x07;
-
 }

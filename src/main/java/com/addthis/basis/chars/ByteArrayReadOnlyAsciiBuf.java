@@ -14,6 +14,9 @@
 
 package com.addthis.basis.chars;
 
+import com.google.common.annotations.Beta;
+
+@Beta
 public class ByteArrayReadOnlyAsciiBuf extends ByteArrayReadOnlyUtfBuf {
 
     public ByteArrayReadOnlyAsciiBuf(byte[] data) {
@@ -43,6 +46,11 @@ public class ByteArrayReadOnlyAsciiBuf extends ByteArrayReadOnlyUtfBuf {
     @Override
     public ReadableCharBuf subSequence(int start, int end) {
         return getSubSequenceForByteBounds(start, end);
+    }
+
+    @Override
+    public String toString() {
+        return new String(data, 0);
     }
 
     /**

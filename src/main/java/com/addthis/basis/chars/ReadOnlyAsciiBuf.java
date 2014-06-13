@@ -14,6 +14,8 @@
 
 package com.addthis.basis.chars;
 
+import com.google.common.annotations.Beta;
+
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -27,7 +29,7 @@ import io.netty.buffer.ByteBuf;
  *
  * This should be particularly helpful for Strings that are
  * quickly or frequently serialized or deserialized and may not
- * even be looked.
+ * even be looked at.
  *
  * It uses a backing ByteBuf, so it extends DefaultByteBufHolder,
  * and should be released when no longer being used to ensure the
@@ -46,6 +48,7 @@ import io.netty.buffer.ByteBuf;
  * characters into their plain ascii counterparts and b) replacing with '?' or
  * ' ' and the like.
  */
+@Beta
 public class ReadOnlyAsciiBuf extends ReadOnlyUtfBuf {
 
     public ReadOnlyAsciiBuf(ByteBuf data) {
@@ -53,7 +56,7 @@ public class ReadOnlyAsciiBuf extends ReadOnlyUtfBuf {
     }
 
     public ReadOnlyAsciiBuf(CharBuf charBuf) {
-        super(charBuf);
+        super(charBuf.toByteBuf());
     }
 
     @Override

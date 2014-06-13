@@ -14,6 +14,11 @@
 
 package com.addthis.basis.chars;
 
+/**
+ * a little helper struct used in some non-ascii (slow path) methods of utf bufs. It isn't terribly
+ * efficient, but it simplified things enough to let the fast path methods get inlined by the jit,
+ * and ascii performance is our top priority at the moment.
+ */
 class BufferIndex {
 
     int charIndex;

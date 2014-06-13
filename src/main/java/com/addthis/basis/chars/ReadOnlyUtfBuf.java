@@ -16,6 +16,8 @@ package com.addthis.basis.chars;
 
 import java.nio.charset.StandardCharsets;
 
+import com.google.common.annotations.Beta;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.buffer.ByteBufUtil;
@@ -29,6 +31,7 @@ import io.netty.util.IllegalReferenceCountException;
  * we may emulate their non-sense semi-variable-width chars to
  * some extent when accessed via the CharSequence interface.
  */
+@Beta
 public class ReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf implements ReadableCharBuf, ByteBufHolder {
 
     private final ByteBuf data;
@@ -82,7 +85,7 @@ public class ReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf implements ReadableCh
         if (o instanceof ReadOnlyUtfBuf) {
             return ByteBufUtil.compare(((ReadOnlyUtfBuf) o).content(), content());
         } else {
-            return CharSequenceComparator.INSTANCE.compare(this, o);
+            return super.compareTo(o);
         }
     }
 

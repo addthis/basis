@@ -16,11 +16,18 @@ package com.addthis.basis.chars;
 
 import java.nio.charset.UnmappableCharacterException;
 
+import com.google.common.annotations.Beta;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.buffer.ByteBufProcessor;
 
+/**
+ * Static utility methods; likely subject to heavy change.
+ */
+@Beta
 public final class CharBufs {
+    private CharBufs() {}
 
     public static ReadableCharBuf utf(byte[] bytes) {
         return new ByteArrayReadOnlyUtfBuf(bytes);
@@ -50,17 +57,11 @@ public final class CharBufs {
         return ascii(values, 0, values.length);
     }
 
-    /**
-     * Aborts on negatives
-     */
+    /** Aborts on negatives aka. non-ascii characters. */
     public static final ByteBufProcessor FIND_NEGATIVE = new ByteBufProcessor() {
         @Override
         public boolean process(byte value) throws Exception {
             return value < 0;
         }
     };
-
-    // unused for utility class
-    private CharBufs() {
-    }
 }

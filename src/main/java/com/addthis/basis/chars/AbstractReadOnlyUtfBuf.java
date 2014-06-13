@@ -14,11 +14,13 @@
 
 package com.addthis.basis.chars;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 
 /**
  * A CharSequence backed by utf-8 bytes instead of java chars (ie. utf-16 bytes)
  */
+@Beta
 public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
 
     /**
@@ -294,6 +296,11 @@ public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
         return hash;
     }
 
+    @Override
+    public int compareTo(ReadableCharBuf o) {
+        return CharSequenceComparator.INSTANCE.compare(this, o);
+    }
+
     public String toDebugString() {
         int cacheInstance = packedIndexCache;
         return Objects.toStringHelper(this)
@@ -302,5 +309,4 @@ public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
                 .add("charDelta", cacheByteOffset(cacheInstance))
                 .toString();
     }
-
 }

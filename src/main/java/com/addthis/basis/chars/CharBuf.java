@@ -14,7 +14,7 @@
 
 package com.addthis.basis.chars;
 
-import io.netty.buffer.ByteBufHolder;
+import com.google.common.annotations.Beta;
 
 /**
  * A variation on ByteBufs for Character Strings. This variation has three primary goals:
@@ -103,20 +103,7 @@ import io.netty.buffer.ByteBufHolder;
  *
  * Maybe add Iteratable Character, or primitive equivalent?
  */
-public interface CharBuf extends ReadableCharBuf, Appendable, ByteBufHolder {
-
-    /**
-     * Return value should be consistent across CharBuf implementations for the
-     * same underlying logical CharSequence.
-     */
-    @Override
-    public int hashCode();
-
-    /**
-     * Should return true for any CharBuf that represents the same underlying logical
-     * CharSequence.
-     */
-    @Override
-    public boolean equals(Object obj);
+@Beta
+public interface CharBuf extends ReadableCharBuf, Appendable {
 
 }

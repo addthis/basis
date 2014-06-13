@@ -18,18 +18,23 @@ import java.util.Arrays;
 
 import java.nio.charset.StandardCharsets;
 
+import com.google.common.annotations.Beta;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 
 /**
- * Intended for those cases where you just really can't avoid using byte[]s.
- * For instance, interacting with third parties that require, or already provide
- * byte[]s from their interface.
+ * Originally intended for those cases where you just really can't avoid using byte[]s.
+ * For instance, interacting with third parties that require, or already provide byte[]s
+ * from their interface. However, it turns out to be far easier to maximize performance
+ * and minimize memory footprint with byte[]s rather than ByteBufs -- to the extent that
+ * it may be worth it in more circumstances.
  *
  * Now you _could_ just wrap the byte[] in a ByteBuf, but at high speeds that might
  * be annoyingly expensive. This class will at least let us test that.
  */
+@Beta
 public class ByteArrayReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf {
 
     protected final byte[] data;
@@ -61,6 +66,9 @@ public class ByteArrayReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf {
 
     @Override
     public ReadableCharBuf getSubSequenceForByteBounds(int start, int end) {
+        // TODO: reconsider support byte[] slices; was ignored previously under the expectation
+        // that slices are already handled by ByteBufs, but ByteBufs are less immediately performant
+        // than we might have hoped.
         int length = end - start;
         byte[] wastefulClone = new byte[length];
         System.arraycopy(data, start, wastefulClone, 0, length);
@@ -68,13 +76,17 @@ public class ByteArrayReadOnlyUtfBuf extends AbstractReadOnlyUtfBuf {
     }
 
     @Override
-    public int compareTo(ReadableCharBuf o) {
-        return CharSequenceComparator.INSTANCE.compare(this, o);
+    public ByteBuf toByteBuf() {
+        return Unpooled.wrappedBuffer(data);
     }
 
     @Override
-    public ByteBuf toByteBuf() {
-        return Unpooled.wrappedBuffer(data);
+    public String toString() {
+        if (knownAsciiOnly(packedIndexCache)) {
+            return new String(data, 0);
+        } else {
+            return new String(data, StandardCharsets.UTF_8);
+        }
     }
 
     @Override

@@ -16,10 +16,13 @@ package com.addthis.basis.chars;
 
 import java.util.Comparator;
 
+import com.google.common.annotations.Beta;
+
 /**
  * Implements Comparator for CharSequence and returns lexicographic
  * ordering.
  */
+@Beta
 public class CharSequenceComparator implements Comparator<CharSequence> {
 
     public static final Comparator<CharSequence> INSTANCE = new CharSequenceComparator();
