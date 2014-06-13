@@ -36,7 +36,6 @@
   <properties>
     <!-- enforcer plugin must be explicitly enabled with -Denforcer.skip=false -->
     <enforcer.skip>true</enforcer.skip>
-    <dep.guava.version>17.0</dep.guava.version>
   </properties>
 
   <build>
