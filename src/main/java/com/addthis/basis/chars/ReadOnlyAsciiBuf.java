@@ -96,6 +96,9 @@ public class ReadOnlyAsciiBuf extends ReadOnlyUtfBuf {
 
     @Override
     public String toString() {
+        // TODO: if our ByteBuf has a backing array, then we can use the deprecated, ascii-only
+        // String constructor : new String(byte[], int, int, int)
+
         // Can't find a good way around String's stupid always-copy constructor, but by
         // not using content().toString(UTF8), we can at least prevent one extra allocation.
         //

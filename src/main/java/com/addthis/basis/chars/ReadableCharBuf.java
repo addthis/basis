@@ -14,6 +14,8 @@
 
 package com.addthis.basis.chars;
 
+import com.google.common.annotations.Beta;
+
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -27,32 +29,22 @@ import io.netty.buffer.ByteBuf;
  *
  * TODO: ConcurrentCharBuf and/ or ImmutableCharBuf markers (interface/ abstract base) desirable?
  */
+@Beta
 public interface ReadableCharBuf extends CharSequence, Comparable<ReadableCharBuf> {
 
-    /**
-     * Return value should be consistent across CharBuf implementations for the
-     * same underlying logical CharSequence.
-     */
+    /** Consistent across implementations for the same underlying character string. */
     @Override
     public int hashCode();
 
-    /**
-     * Should return true for any CharBuf that represents the same underlying logical
-     * CharSequence.
-     */
+    /** True for any ReadableCharBuf that represents the same underlying character string. */
     @Override
     public boolean equals(Object obj);
 
-    /**
-     * Should perform lexicographical comparison.
-     */
+    /** Should perform lexicographical comparison. */
     @Override
     public int compareTo(ReadableCharBuf o);
 
-    /**
-     * Returns a view of this CharSequence as its backing Utf8 bytes as
-     * represented by a ByteBuf.
-     */
+    /** A view of the backing Utf8 bytes as represented by a ByteBuf. */
     public ByteBuf toByteBuf();
 
     // get arbitrary byte from backing byte store

@@ -41,6 +41,12 @@ public abstract class CharSequenceTests {
     }
 
     @Test
+    public void toStringEquals() {
+        CharSequence charBuf = getCharSequenceForString(controlSequence);
+        assertEquals(controlSequence.toString(), charBuf.toString());
+    }
+
+    @Test
     public void fullOneTimeIteration() {
         CharSequence charBuf = getCharSequenceForString(controlSequence);
         for (int i = 0; i < controlSequence.length(); i++) {
