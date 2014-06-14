@@ -48,11 +48,11 @@ public interface ReadableCharBuf extends CharSequence, Comparable<ReadableCharBu
     public ByteBuf toByteBuf();
 
     // get arbitrary byte from backing byte store
-    public abstract byte getByte(int index);
+    public byte getByte(int index);
 
     // number of bytes in backing byte store
-    public abstract int getByteLength();
+    public int getByteLength();
 
     // start is inclusive, end is exclusive
-    public abstract ReadableCharBuf getSubSequenceForByteBounds(int start, int end);
+    public ReadableCharBuf getSubSequenceForByteBounds(int start, int end);
 }
