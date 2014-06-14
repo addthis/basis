@@ -107,8 +107,8 @@ public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
     public int length() {
         // TODO: experiment with getLong() and masking for flag bits; possibly much faster for off-heap impls
         final int cacheInstance = packedIndexCache;
-        if (knownAsciiOnly(cacheInstance)) {
-            return cacheInstance;
+        if ((cacheInstance >= 0) && knownAsciiOnly(tryAsciiScan(cacheInstance, getByteLength()))) {
+            return getByteLength();
         }
         int charIndex = cacheCharIndex(cacheInstance);
         int byteOffset = cacheByteOffset(cacheInstance);
@@ -139,12 +139,15 @@ public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
     }
 
     private int tryAsciiScan(int start, int end) {
+        end = Math.min(end, getByteLength());
         for (int i = start; i < end; i++) {
             byte b = getByte(i);
             if (b < 0) {
+                packedIndexCache = i;
                 return i;
             }
         }
+        packedIndexCache = end;
         return end;
     }
 
@@ -186,11 +189,8 @@ public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
         // the comparison checks if the cache knows about all the bytes up to the end index.
         if (end <= cacheInstance) {
             return getSubSequenceForByteBounds(start, end);
-        } else if (cacheInstance >= 0) {
-            packedIndexCache = tryAsciiScan(cacheInstance, end);
-            if (end <= packedIndexCache) {
-                return getSubSequenceForByteBounds(start, end);
-            }
+        } else if (cacheInstance >= 0 && end <= tryAsciiScan(cacheInstance, end)) {
+            return getSubSequenceForByteBounds(start, end);
         }
         BufferIndex index = new BufferIndex(cacheInstance);
         nonAsciiScan(index, start);
@@ -257,13 +257,11 @@ public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
     public char charAt(int index) {
         // ascii short cuts
         byte b = getByte(index); // unused for non-ascii but oh well
-        if (index < packedIndexCache) {
+        final int cacheInstance = packedIndexCache;
+        if (index < cacheInstance) {
             return (char) b;
-        } else if (packedIndexCache >= 0) {
-            packedIndexCache = tryAsciiScan(packedIndexCache, getByteLength());
-            if (index < packedIndexCache) {
-                return (char) b;
-            }
+        } else if ((cacheInstance >= 0) && (index < tryAsciiScan(cacheInstance, index + 16))) {
+            return (char) b;
         }
 
         BufferIndex bufferIndex = new BufferIndex(packedIndexCache);
