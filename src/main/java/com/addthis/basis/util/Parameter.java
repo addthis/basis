@@ -13,37 +13,102 @@
  */
 package com.addthis.basis.util;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Properties;
 
 public class Parameter {
+    private final static String paramFile = Parameter.value("param.file");
+    private final static boolean output = Parameter.boolValue("param.output",false) && paramFile != null;
+
+    static {
+        if (paramFile != null) {
+            File file = new File(paramFile);
+            if (file.exists() && file.isFile()) {
+                try {
+                    FileInputStream in = new FileInputStream(file);
+                    System.getProperties().load(in);
+                    in.close();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private static Properties track;
+
+    private synchronized static void track(String key, Object value) {
+        if (!output) {
+            return;
+        }
+        if (track == null) {
+            track = new Properties();
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run() {
+                    try {
+                        File file = new File(paramFile);
+                        if (!(file.getParentFile().exists() && file.getParentFile().isDirectory())) {
+                            return;
+                        }
+                        FileOutputStream out = new FileOutputStream(file,true);
+                        track.store(out,"tracked parameters");
+                        out.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+        if (value != null) {
+            track.put(key, value.toString());
+        }
+    }
+
     public static String value(String key) {
-        return System.getProperty(key);
+        String val =  System.getProperty(key);
+        track(key, val);
+        return val;
     }
 
     public static String value(String key, String defaultValue) {
-        return System.getProperty(key, defaultValue);
+        String val = System.getProperty(key, defaultValue);
+        track(key, val);
+        return val;
     }
 
     public static boolean boolValue(String key, boolean defaultValue) {
         if (value(key) == null) {
+            track(key, defaultValue);
             return defaultValue;
         }
-        return intValue(key, 0) > 0 || value(key, "").equalsIgnoreCase("true");
+        boolean val = intValue(key, 0) > 0 || value(key, "").equalsIgnoreCase("true");
+        track(key, val);
+        return val;
     }
 
     public static int intValue(String key, int defaultValue) {
-        return (int) longValue(key, defaultValue);
+        int val = (int) longValue(key, defaultValue);
+        track(key, val);
+        return val;
     }
 
     public static long longValue(String key, long defaultValue) {
-        String value = System.getProperty(key);
+        String value = value(key);
         if (value == null) {
+            track(key, defaultValue);
             return defaultValue;
         }
+        long val = 0;
         try {
-            return Numbers.parseHumanReadable(value);
+            val = Numbers.parseHumanReadable(value);
         } catch (Exception ex) {
-            return defaultValue;
+            val = defaultValue;
         }
+        track(key, val);
+        return val;
     }
 
 }
