@@ -17,58 +17,90 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+
 import java.util.Properties;
 
-public class Parameter {
-    private final static String paramFile = Parameter.value("param.file");
-    private final static boolean output = Parameter.boolValue("param.output",false) && paramFile != null;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    static {
-        if (paramFile != null) {
-            File file = new File(paramFile);
-            if (file.exists() && file.isFile()) {
-                try {
-                    FileInputStream in = new FileInputStream(file);
-                    System.getProperties().load(in);
-                    in.close();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
+public class Parameter {
+
+    /**
+     * There is some code duplication among the inner and outer classes
+     * but the intent is to avoid any bizarre ClassLoader thread safety
+     * issues when initializing the static variables.
+     */
+    private static class ParameterLoader {
+        private static boolean parseBoolean(String input, boolean defaultValue) {
+            boolean result = defaultValue;
+            try {
+                if (input != null) {
+                    result = Numbers.parseHumanReadable(input) > 0;
                 }
+            } catch (NumberFormatException ex) {
+                result = input.equalsIgnoreCase("true");
             }
+            return (result);
         }
     }
 
-    private static Properties track;
+    private final static Logger log = LoggerFactory.getLogger(Parameter.class);;
+    private final static String paramFile;
+    private final static boolean input;
+    private final static boolean output;
+    private final static Properties track;
 
-    private synchronized static void track(String key, Object value) {
-        if (!output) {
-            return;
+    static {
+        paramFile = System.getProperty("param.file");
+        input = ParameterLoader.parseBoolean(System.getProperty("param.input"), false);
+        output = ParameterLoader.parseBoolean(System.getProperty("param.output"), false);
+        if (input && paramFile != null) {
+            File file = new File(paramFile);
+            try {
+                if (file.exists() && file.isFile()) {
+                    FileInputStream in = new FileInputStream(file);
+                    System.getProperties().load(in);
+                    in.close();
+                }
+            } catch (IOException ex) {
+                log.error("Error reading from '" + file.getPath() + "'", ex);
+            }
         }
-        if (track == null) {
+        if (output && paramFile != null) {
             track = new Properties();
+            track.put("param.file", paramFile.toString());
+            track.put("param.input", Boolean.valueOf(input).toString());
+            track.put("param.output", Boolean.valueOf(output).toString());
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
+                    File file = new File(paramFile);
                     try {
-                        File file = new File(paramFile);
-                        if (!(file.getParentFile().exists() && file.getParentFile().isDirectory())) {
-                            return;
+                        if (file.getParentFile().exists() && file.getParentFile().isDirectory()) {
+                            FileOutputStream out = new FileOutputStream(file, true);
+                            track.store(out, "tracked parameters");
+                            out.close();
                         }
-                        FileOutputStream out = new FileOutputStream(file,true);
-                        track.store(out,"tracked parameters");
-                        out.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    } catch (IOException ex) {
+                        log.error("Error writing to '" + file.getPath() + "'", ex);
                     }
                 }
             });
+        } else {
+            track = null;
+        }
+    }
+
+    private static void track(String key, Object value) {
+        if (track == null) {
+            return;
         }
         if (value != null) {
-            track.put(key, value.toString());
+            track.setProperty(key, value.toString());
         }
     }
 
     public static String value(String key) {
-        String val =  System.getProperty(key);
+        String val = System.getProperty(key);
         track(key, val);
         return val;
     }
@@ -101,7 +133,7 @@ public class Parameter {
             track(key, defaultValue);
             return defaultValue;
         }
-        long val = 0;
+        long val;
         try {
             val = Numbers.parseHumanReadable(value);
         } catch (Exception ex) {
