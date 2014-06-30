@@ -170,31 +170,6 @@ public class ConcurrentHashMapV8<K,V> extends AbstractMap<K,V>
 		implements ConcurrentMap<K,V>, Serializable {
 	private static final long serialVersionUID = 7249069246763182397L;
 
-	/**
-	 * An object for traversing and partitioning elements of a source.
-	 * This interface provides a subset of the functionality of JDK8
-	 * java.util.Spliterator.
-	 */
-	public static interface ConcurrentHashMapSpliterator<T> {
-		/**
-		 * If possible, returns a new spliterator covering
-		 * approximately one half of the elements, which will not be
-		 * covered by this spliterator. Returns null if cannot be
-		 * split.
-		 */
-		ConcurrentHashMapSpliterator<T> trySplit();
-		/**
-		 * Returns an estimate of the number of elements covered by
-		 * this Spliterator.
-		 */
-		long estimateSize();
-
-		/** Applies the action to each untraversed element */
-		void forEachRemaining(Action<? super T> action);
-		/** If an element remains, applies the action and returns true. */
-		boolean tryAdvance(Action<? super T> action);
-	}
-
 	// Sams
 	/** Interface describing a void action of one argument */
 	public interface Action<A> { void apply(A a); }
@@ -3314,113 +3289,6 @@ public class ConcurrentHashMapV8<K,V> extends AbstractMap<K,V>
 		}
 	}
 
-	static final class KeySpliterator<K,V> extends Traverser<K,V>
-			implements ConcurrentHashMapSpliterator<K> {
-		long est;               // size estimate
-		KeySpliterator(Node<K,V>[] tab, int size, int index, int limit,
-					   long est) {
-			super(tab, size, index, limit);
-			this.est = est;
-		}
-
-		public ConcurrentHashMapSpliterator<K> trySplit() {
-			int i, f, h;
-			return (h = ((i = baseIndex) + (f = baseLimit)) >>> 1) <= i ? null :
-					new KeySpliterator<K,V>(tab, baseSize, baseLimit = h,
-							f, est >>>= 1);
-		}
-
-		public void forEachRemaining(Action<? super K> action) {
-			if (action == null) throw new NullPointerException();
-			for (Node<K,V> p; (p = advance()) != null;)
-				action.apply(p.key);
-		}
-
-		public boolean tryAdvance(Action<? super K> action) {
-			if (action == null) throw new NullPointerException();
-			Node<K,V> p;
-			if ((p = advance()) == null)
-				return false;
-			action.apply(p.key);
-			return true;
-		}
-
-		public long estimateSize() { return est; }
-
-	}
-
-	static final class ValueSpliterator<K,V> extends Traverser<K,V>
-			implements ConcurrentHashMapSpliterator<V> {
-		long est;               // size estimate
-		ValueSpliterator(Node<K,V>[] tab, int size, int index, int limit,
-						 long est) {
-			super(tab, size, index, limit);
-			this.est = est;
-		}
-
-		public ConcurrentHashMapSpliterator<V> trySplit() {
-			int i, f, h;
-			return (h = ((i = baseIndex) + (f = baseLimit)) >>> 1) <= i ? null :
-					new ValueSpliterator<K,V>(tab, baseSize, baseLimit = h,
-							f, est >>>= 1);
-		}
-
-		public void forEachRemaining(Action<? super V> action) {
-			if (action == null) throw new NullPointerException();
-			for (Node<K,V> p; (p = advance()) != null;)
-				action.apply(p.val);
-		}
-
-		public boolean tryAdvance(Action<? super V> action) {
-			if (action == null) throw new NullPointerException();
-			Node<K,V> p;
-			if ((p = advance()) == null)
-				return false;
-			action.apply(p.val);
-			return true;
-		}
-
-		public long estimateSize() { return est; }
-
-	}
-
-	static final class EntrySpliterator<K,V> extends Traverser<K,V>
-			implements ConcurrentHashMapSpliterator<Entry<K,V>> {
-		final ConcurrentHashMapV8<K,V> map; // To export MapEntry
-		long est;               // size estimate
-		EntrySpliterator(Node<K,V>[] tab, int size, int index, int limit,
-						 long est, ConcurrentHashMapV8<K,V> map) {
-			super(tab, size, index, limit);
-			this.map = map;
-			this.est = est;
-		}
-
-		public ConcurrentHashMapSpliterator<Entry<K,V>> trySplit() {
-			int i, f, h;
-			return (h = ((i = baseIndex) + (f = baseLimit)) >>> 1) <= i ? null :
-					new EntrySpliterator<K,V>(tab, baseSize, baseLimit = h,
-							f, est >>>= 1, map);
-		}
-
-		public void forEachRemaining(Action<? super Entry<K,V>> action) {
-			if (action == null) throw new NullPointerException();
-			for (Node<K,V> p; (p = advance()) != null; )
-				action.apply(new MapEntry<K,V>(p.key, p.val, map));
-		}
-
-		public boolean tryAdvance(Action<? super Entry<K,V>> action) {
-			if (action == null) throw new NullPointerException();
-			Node<K,V> p;
-			if ((p = advance()) == null)
-				return false;
-			action.apply(new MapEntry<K,V>(p.key, p.val, map));
-			return true;
-		}
-
-		public long estimateSize() { return est; }
-
-	}
-
     /* ----------------Views -------------- */
 
 	/**
@@ -3686,14 +3554,6 @@ public class ConcurrentHashMapV8<K,V> extends AbstractMap<K,V>
 							(containsAll(c) && c.containsAll(this))));
 		}
 
-		public ConcurrentHashMapSpliterator<K> spliterator() {
-			Node<K,V>[] t;
-			ConcurrentHashMapV8<K,V> m = map;
-			long n = m.sumCount();
-			int f = (t = m.table) == null ? 0 : t.length;
-			return new KeySpliterator<K,V>(t, f, 0, f, n < 0L ? 0L : n);
-		}
-
 		public void forEach(Action<? super K> action) {
 			if (action == null) throw new NullPointerException();
 			Node<K,V>[] t;
@@ -3742,14 +3602,6 @@ public class ConcurrentHashMapV8<K,V> extends AbstractMap<K,V>
 		}
 		public final boolean addAll(Collection<? extends V> c) {
 			throw new UnsupportedOperationException();
-		}
-
-		public ConcurrentHashMapSpliterator<V> spliterator() {
-			Node<K,V>[] t;
-			ConcurrentHashMapV8<K,V> m = map;
-			long n = m.sumCount();
-			int f = (t = m.table) == null ? 0 : t.length;
-			return new ValueSpliterator<K,V>(t, f, 0, f, n < 0L ? 0L : n);
 		}
 
 		public void forEach(Action<? super V> action) {
@@ -3830,14 +3682,6 @@ public class ConcurrentHashMapV8<K,V> extends AbstractMap<K,V>
 			return ((o instanceof Set) &&
 					((c = (Set<?>)o) == this ||
 							(containsAll(c) && c.containsAll(this))));
-		}
-
-		public ConcurrentHashMapSpliterator<Entry<K,V>> spliterator() {
-			Node<K,V>[] t;
-			ConcurrentHashMapV8<K,V> m = map;
-			long n = m.sumCount();
-			int f = (t = m.table) == null ? 0 : t.length;
-			return new EntrySpliterator<K,V>(t, f, 0, f, n < 0L ? 0L : n, m);
 		}
 
 		public void forEach(Action<? super Entry<K,V>> action) {
