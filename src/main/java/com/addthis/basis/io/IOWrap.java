@@ -27,46 +27,36 @@ import java.util.zip.GZIPOutputStream;
 
 
 public final class IOWrap {
-    /** */
+    private IOWrap() {}
+
     public static InputStream buffer(InputStream in, int buffer) {
         return buffer > 0 ? new BufferedInputStream(in, buffer) : in;
     }
 
-    /** */
     public static InputStream gz(InputStream in, int buffer) {
         try {
             return buffer > 0 ? new GZIPInputStreamX(in, buffer) : new GZIPInputStreamX(in);
         } catch (IOException e) {
-            e.printStackTrace();
-            return in;
+            throw new RuntimeException(e);
         }
     }
 
-    /** */
     public static OutputStream buffer(OutputStream out, int buffer) {
         return buffer > 0 ? new BufferedOutputStream(out) : out;
     }
 
-    /** */
     public static OutputStream gz(OutputStream in, int buffer) {
         try {
             return buffer > 0 ? new GZIPOutputStream(in, buffer) : new GZIPOutputStream(in);
         } catch (IOException e) {
-            e.printStackTrace();
-            return in;
+            throw new RuntimeException(e);
         }
     }
 
-    /**
-     * @throws FileNotFoundException
-     */
     public static InputStream fileIn(File file, int buffer, boolean gz) throws FileNotFoundException {
         return gz ? gz(new FileInputStream(file), buffer) : buffer(new FileInputStream(file), buffer);
     }
 
-    /**
-     * @throws FileNotFoundException
-     */
     public static OutputStream fileOut(File file, int buffer, boolean gz, boolean append) throws FileNotFoundException {
         return gz ? gz(new FileOutputStream(file, append), buffer) : buffer(new FileOutputStream(file, append), buffer);
     }
