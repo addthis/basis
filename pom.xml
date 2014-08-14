@@ -111,7 +111,6 @@
       <artifactId>netty-buffer</artifactId>
       <version>4.0.19.Final</version>
       <scope>compile</scope>
-      <optional>true</optional>
     </dependency>
   </dependencies>
 
