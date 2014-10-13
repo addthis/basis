@@ -21,7 +21,7 @@ package com.addthis.basis.util;
  * this saves the overhead of constant native calls.
  */
 public final class JitterClock extends Thread {
-    private static JitterClock singleton = new JitterClock(10);
+    private static final JitterClock singleton = new JitterClock(10);
 
     public static long globalTime() {
         return time;

@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ConstrainedHttpClientTest {
 
-    private static int numThreads = 32;
+    private static final int numThreads = 32;
 
     private static class AddThisThread extends Thread {
 
