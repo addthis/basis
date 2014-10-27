@@ -194,14 +194,8 @@ public class HttpUtil {
      */
     public static HttpResponse execute(HttpRequestBase request, int timeoutms) throws IOException {
         HttpClientBuilder builder = HttpClientBuilder.create();
-        if (timeoutms > 0) {
-            RequestConfig config = RequestConfig.custom()
-                    .setConnectTimeout(timeoutms)
-                    .setSocketTimeout(timeoutms).build();
-            builder.setDefaultRequestConfig(config);
-        }
         CloseableHttpResponse response = null;
-        try (CloseableHttpClient client = builder.build()) {
+        try (CloseableHttpClient client = makeCloseableHttpClient(timeoutms, 0)) {
             response = client.execute(request);
             return new HttpResponse(response);
         } finally {
@@ -223,20 +217,8 @@ public class HttpUtil {
      */
     public static HttpResponse execute(HttpRequestBase request, int timeoutms, int numRetries)
             throws IOException {
-        HttpClientBuilder builder = HttpClientBuilder.create();
-        if (numRetries >= 0) {
-            DefaultHttpRequestRetryHandler retryHandler =
-                    new DefaultHttpRequestRetryHandler(numRetries, false);
-            builder = builder.setRetryHandler(retryHandler);
-        }
-        if (timeoutms > 0) {
-            RequestConfig config = RequestConfig.custom()
-                    .setConnectTimeout(timeoutms)
-                    .setSocketTimeout(timeoutms).build();
-            builder.setDefaultRequestConfig(config);
-        }
         CloseableHttpResponse response = null;
-        try (CloseableHttpClient client = builder.build()) {
+        try (CloseableHttpClient client = makeCloseableHttpClient(timeoutms, numRetries)) {
             response = client.execute(request);
             return new HttpResponse(response);
         } finally {
@@ -275,21 +257,9 @@ public class HttpUtil {
      */
     public static List<Method> execute(List<? extends HttpRequestBase> requests,
                                        int numThreads, int timeoutms, int numRetries) {
-        HttpClientBuilder builder = HttpClientBuilder.create();
-        if (timeoutms > 0) {
-            RequestConfig config = RequestConfig.custom()
-                    .setConnectTimeout(timeoutms)
-                    .setSocketTimeout(timeoutms).build();
-            builder.setDefaultRequestConfig(config);
-        }
-        if (numRetries >= 0) {
-            DefaultHttpRequestRetryHandler retryHandler =
-                    new DefaultHttpRequestRetryHandler(numRetries, false);
-            builder = builder.setRetryHandler(retryHandler);
-        }
         List<Method> responses = new ArrayList<>();
         ExecutorService executor = Executors.newFixedThreadPool(Math.min(numThreads, requests.size()));
-        CloseableHttpClient client = builder.build();
+        CloseableHttpClient client = makeCloseableHttpClient(timeoutms, numRetries);
         try {
             for (int i = 0; i < requests.size(); i++) {
                 Method method = new Method(client, requests.get(i), timeoutms);
@@ -319,6 +289,29 @@ public class HttpUtil {
             } catch (IOException ignored) {
             }
         }
+    }
+
+    /**
+     * Internal function to create http clients for fetching
+     * @param timeoutms The timeout, which is applied to the connect, connection request, and socket timeouts. Ignored if <=0
+     * @param numRetries The number of retries. Ignored if <0
+     * @return A CloseableHttpClient with the specified parameters set
+     */
+    private static CloseableHttpClient makeCloseableHttpClient(int timeoutms, int numRetries) {
+        HttpClientBuilder builder = HttpClientBuilder.create();
+        if (numRetries >= 0) {
+            DefaultHttpRequestRetryHandler retryHandler =
+                    new DefaultHttpRequestRetryHandler(numRetries, false);
+            builder = builder.setRetryHandler(retryHandler);
+        }
+        if (timeoutms > 0) {
+            RequestConfig config = RequestConfig.custom()
+                    .setConnectTimeout(timeoutms)
+                    .setConnectionRequestTimeout(timeoutms)
+                    .setSocketTimeout(timeoutms).build();
+            builder.setDefaultRequestConfig(config);
+        }
+        return builder.build();
     }
 
     /**
