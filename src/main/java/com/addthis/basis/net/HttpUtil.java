@@ -39,6 +39,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
@@ -192,7 +193,7 @@ public class HttpUtil {
      * @return completed request
      * @throws IOException
      */
-    public static HttpResponse execute(HttpRequestBase request, int timeoutms) throws IOException {
+    public static HttpResponse execute(HttpUriRequest request, int timeoutms) throws IOException {
         HttpClientBuilder builder = HttpClientBuilder.create();
         CloseableHttpResponse response = null;
         try (CloseableHttpClient client = makeCloseableHttpClient(timeoutms, 0)) {
@@ -215,7 +216,7 @@ public class HttpUtil {
      * @return completed request
      * @throws IOException
      */
-    public static HttpResponse execute(HttpRequestBase request, int timeoutms, int numRetries)
+    public static HttpResponse execute(HttpUriRequest request, int timeoutms, int numRetries)
             throws IOException {
         CloseableHttpResponse response = null;
         try (CloseableHttpClient client = makeCloseableHttpClient(timeoutms, numRetries)) {
