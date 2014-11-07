@@ -16,6 +16,7 @@ package com.addthis.basis.util;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
+import com.google.common.collect.Iterators;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -70,6 +71,16 @@ public class StringsTest {
     @Test(expected = NegativeArraySizeException.class)
     public void testRepeatNegativeTimes() {
         Strings.repeat('!', -1);
+    }
+
+    @Test
+    public void testJoin() {
+        String[] items1 = {};
+        String[] items2 = {"a", "b", "c"};
+        assertEquals("", Strings.join(items1, ","));
+        assertEquals("", Strings.join(Iterators.forArray(items1), ","));
+        assertEquals("a,b,c", Strings.join(items2, ","));
+        assertEquals("a,b,c", Strings.join(Iterators.forArray(items2), ","));
     }
 
     @Test
