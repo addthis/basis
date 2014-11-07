@@ -13,14 +13,11 @@
  */
 package com.addthis.basis.util;
 
-import com.google.common.collect.Iterators;
-
 import java.io.UnsupportedEncodingException;
 
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 
-import java.util.Iterator;
 import java.util.Objects;
 
 public final class Strings {
@@ -221,16 +218,11 @@ public final class Strings {
     }
 
     /** */
-    public static String join(Object[] items, String separator) {
-        return join(Iterators.forArray(items), separator);
-    }
-
-    public static String join(Iterator<?> iterator, String separator) {
+    public static String join(Object s[], String j) {
         StringBuilder sb = new StringBuilder();
-        while (iterator.hasNext()) {
-            Object p = iterator.next();
+        for (Object p : s) {
             if (sb.length() > 0) {
-                sb.append(separator);
+                sb.append(j);
             }
             sb.append(p != null ? p.toString() : "");
         }
