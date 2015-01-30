@@ -85,7 +85,6 @@
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
-        <version>${dep.plugin.rat.version}</version>
       </plugin>
     </plugins>
   </reporting>
