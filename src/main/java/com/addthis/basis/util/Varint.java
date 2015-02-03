@@ -74,11 +74,7 @@ public final class Varint {
     }
 
     public static void writeSignedVarLong(long value, ByteBuf out) {
-        while ((value & 0xFFFFFFFFFFFFFF80L) != 0L) {
-            out.writeByte(((int) value & 0x7F) | 0x80);
-            value >>>= 7;
-        }
-        out.writeByte((int) value & 0x7F);
+        writeUnsignedVarLong((value << 1) ^ (value >> 63), out);
     }
 
     /**
