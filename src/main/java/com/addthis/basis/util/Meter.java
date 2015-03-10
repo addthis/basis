@@ -203,16 +203,16 @@ public class Meter<E extends Enum<E>> {
             if (metrics[i] == null) {
                 continue;
             }
-            if (!Strings.isEmpty(metrics[i].getCountLabel())) {
+            if (!LessStrings.isEmpty(metrics[i].getCountLabel())) {
                 result.put(metrics[i].getCountLabel(), states[i].getCount());
             }
-            if (!Strings.isEmpty(metrics[i].getMaxLabel())) {
+            if (!LessStrings.isEmpty(metrics[i].getMaxLabel())) {
                 result.put(metrics[i].getMaxLabel(), states[i].getMax());
             }
-            if (!Strings.isEmpty(metrics[i].getAverageLabel())) {
+            if (!LessStrings.isEmpty(metrics[i].getAverageLabel())) {
                 result.put(metrics[i].getAverageLabel(), states[i].getAverage());
             }
-            if (!Strings.isEmpty(metrics[i].getRateLabel())) {
+            if (!LessStrings.isEmpty(metrics[i].getRateLabel())) {
                 result.put(metrics[i].getRateLabel(), (long) states[i].getRate());
             }
         }

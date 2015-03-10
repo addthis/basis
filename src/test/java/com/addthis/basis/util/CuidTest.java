@@ -21,10 +21,10 @@ import static org.junit.Assert.assertTrue;
 public class CuidTest {
     @Test
     public void testCreateCuid() {
-        String cuid = CUID.createCUID(29823298, Numbers.random.nextInt());
+        String cuid = CUID.createCUID(29823298, LessNumbers.random.nextInt());
         assertEquals("747f", cuid.substring(0, cuid.length() - 8));
 
-        cuid = CUID.createCUID(1226509443755L, Numbers.random.nextInt());
+        cuid = CUID.createCUID(1226509443755L, LessNumbers.random.nextInt());
         assertEquals("491b0c83", cuid.substring(0, cuid.length() - 8));
 
         cuid = CUID.createCUID(1226509443755L, -1);

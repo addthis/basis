@@ -19,28 +19,28 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class FilesTest {
+public class LessFilesTest {
     @Test
     public void testMatchDirs() throws Exception {
         for (String s : new String[]{"test/path/to/a/from/x", "test/path/to/b/from/y", "test/path/to/c/from/z", "test/path/to/c/from/zz"}) {
             new File(s).mkdirs();
         }
-        for (File f : Files.matchFiles("test/path/to/*/from/*")) {
+        for (File f : LessFiles.matchFiles("test/path/to/*/from/*")) {
             System.out.println("found1 -> " + f);
         }
-        for (File f : Files.matchFiles("test/path/to/*")) {
+        for (File f : LessFiles.matchFiles("test/path/to/*")) {
             System.out.println("found2 -> " + f);
         }
-        for (File f : Files.matchFiles("test/*/*/*/from")) {
+        for (File f : LessFiles.matchFiles("test/*/*/*/from")) {
             System.out.println("found3 -> " + f);
         }
     }
 
     @Test
     public void testSuffix() {
-        assertEquals("foo", Files.getSuffix("asdf.foo"));
-        assertEquals("", Files.getSuffix(new File("/foo/bar.baz/zot")));
-        assertEquals(new File("/foo/bar.baz"), Files.replaceSuffix(new File("/foo/bar.zot"), ".baz"));
-        assertEquals(new File("/foo/bar"), Files.replaceSuffix(new File("/foo/bar.zot"), ""));
+        assertEquals("foo", LessFiles.getSuffix("asdf.foo"));
+        assertEquals("", LessFiles.getSuffix(new File("/foo/bar.baz/zot")));
+        assertEquals(new File("/foo/bar.baz"), LessFiles.replaceSuffix(new File("/foo/bar.zot"), ".baz"));
+        assertEquals(new File("/foo/bar"), LessFiles.replaceSuffix(new File("/foo/bar.zot"), ""));
     }
 }

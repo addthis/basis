@@ -52,7 +52,7 @@ public class DictUtil {
      * @return reference to the map for convenience
      */
     public static Map<String, String> parseParam(String str, Map<String, String> map) {
-        if (Strings.isEmpty(str)) {
+        if (LessStrings.isEmpty(str)) {
             return map;
         }
         int sep = str.indexOf('=');
@@ -60,9 +60,9 @@ public class DictUtil {
             map.put(urlDecode(str), null);
         } else if (sep == 0) {  // no key, discard
         } else if (sep < str.length() - 1) {  // has
-            map.put(Bytes.urldecode(str.substring(0, sep)), Bytes.urldecode(str.substring(sep + 1)));
+            map.put(LessBytes.urldecode(str.substring(0, sep)), LessBytes.urldecode(str.substring(sep + 1)));
         } else {  // empty value
-            map.put(Bytes.urldecode(str.substring(0, sep)), "");
+            map.put(LessBytes.urldecode(str.substring(0, sep)), "");
         }
         return map;
     }

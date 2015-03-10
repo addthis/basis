@@ -34,7 +34,7 @@ public class CUID {
      */
     @Deprecated
     public static String createGUID(int base) {
-        return Numbers.nextLong(base) + Numbers.nextLong(base);
+        return LessNumbers.nextLong(base) + LessNumbers.nextLong(base);
     }
 
     /**
@@ -45,14 +45,14 @@ public class CUID {
      */
     @Deprecated
     public static String createGUID() {
-        return createGUID(Numbers.MAX_BASE);
+        return createGUID(LessNumbers.MAX_BASE);
     }
 
     /**
      * Generates 64-bit time-domain prefixed semi-random identifier
      */
     public static String createCUID() {
-        return createCUID(System.currentTimeMillis(), Numbers.random.nextInt());
+        return createCUID(System.currentTimeMillis(), LessNumbers.random.nextInt());
     }
 
     public static String createCUID(long time, int rand) {
@@ -87,7 +87,7 @@ public class CUID {
             return 0L;
         }
         try {
-            return Numbers.longFromBase(cuid, 16, true);
+            return LessNumbers.longFromBase(cuid, 16, true);
         } catch (Exception ex) {
             System.out.println("invalid cuid : " + cuid);
             return fallbackHashFunc.hashUnencodedChars(cuid).asLong();

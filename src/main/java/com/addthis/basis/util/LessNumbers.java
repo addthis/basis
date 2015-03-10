@@ -14,12 +14,16 @@
 package com.addthis.basis.util;
 
 import java.util.Random;
+import java.util.UUID;
+
+import java.math.BigInteger;
 
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashFunction;
 
-public class Numbers {
+public class LessNumbers {
     private static final HashFunction fallbackHashFunc = Hashing.murmur3_128();
+    private static final long SIX_BIT_MASK = 63;
 
 
     /**
@@ -107,7 +111,7 @@ public class Numbers {
             throw new RuntimeException(base + " outside base range of 2-" + basechars.length);
         }
         long rv = 0;
-        char cv[] = val.toCharArray();
+        char[] cv = val.toCharArray();
         for (char aCv : cv) {
             rv *= base;
             int av = 0;
@@ -143,7 +147,7 @@ public class Numbers {
             throw new RuntimeException(base + " outside base range of 2-" + basechars.length);
         }
         int rv = 0;
-        char cv[] = val.toCharArray();
+        char[] cv = val.toCharArray();
         for (char aCv : cv) {
             rv *= base;
             if (aCv >= '0' && aCv <= '9') {
@@ -162,13 +166,28 @@ public class Numbers {
     /**
      * Array of chars for generating numbers in alternate bases.
      */
-    static final char basechars[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+    static final char[] basechars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+    static final BigInteger[] bigIntegerChars = new BigInteger[basechars.length];
+    static {
+        int offset = 0;
+        for(char i = '0'; i <= '9'; i++) {
+            bigIntegerChars[offset++] = BigInteger.valueOf(i - '0');
+        }
+        for(char i = 'a'; i <= 'z'; i++) {
+            bigIntegerChars[offset++] = BigInteger.valueOf(i - 'a' + 10);
+        }
+        for(char i = 'A'; i <= 'Z'; i++) {
+            bigIntegerChars[offset++] = BigInteger.valueOf(i - 'A' + 36);
+        }
+        bigIntegerChars[offset++] = BigInteger.valueOf(62);
+        bigIntegerChars[offset++] = BigInteger.valueOf(63);
+    }
 
     public static final int MAX_BASE = basechars.length;
     /**
      * String containing zeros for pre-padding base-36 longs.
      */
-    private static final String pads[] = new String[MAX_BASE];
+    private static final String[] pads = new String[MAX_BASE];
     /**
      * Public pre-generated Random for what ailes you.
      */
@@ -185,7 +204,7 @@ public class Numbers {
         if (base > basechars.length) {
             throw new RuntimeException(base + " outside base range of 2-" + basechars.length);
         }
-        char out[] = new char[128];
+        char[] out = new char[128];
         for (int i = out.length - 1;; i--) {
             out[i] = basechars[(int) Math.abs(val % base)];
             val = val / base;
@@ -204,7 +223,7 @@ public class Numbers {
         synchronized (pads) {
             String pad = pads[base - 1];
             if (pad == null) {
-                pad = Bytes.clear(toBase(Long.MAX_VALUE, base), '0');
+                pad = LessBytes.clear(toBase(Long.MAX_VALUE, base), '0');
                 pads[base - 1] = pad;
             }
             String nv = toBase(random.nextLong(), base);
@@ -215,12 +234,12 @@ public class Numbers {
     /**
      * Array of bytes for generating hex strings.
      */
-    public static final byte hex[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-    public static final byte HEX[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+    public static final byte[] hex = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    public static final byte[] HEX = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     private static final boolean verboseHex = System.getProperty("xhex", "0").equals("1");
 
-    public static String toHexString(byte b[]) {
+    public static String toHexString(byte[] b) {
         StringBuilder sb = new StringBuilder();
         for (byte c : b) {
             if (sb.length() > 0) {
@@ -262,5 +281,151 @@ public class Numbers {
         } catch (Exception ex) {
             return def;
         }
+    }
+
+    public static long longFromBase36(String val) {
+        return longFromBase(val.toLowerCase(), 36);
+    }
+
+    public static long longFromBase64(String val) {
+        return longFromBase(val, 64);
+    }
+
+    public static String toBase36(long val) {
+        return toBase(val, 36).toUpperCase();
+    }
+
+    public static int intFromBase36(String val) {
+        return intFromBase(val.toLowerCase(), 36);
+    }
+
+    public static String toBase64(long val) {
+        return toBase(val, 64);
+    }
+
+    public static int intFromBase64(String val) {
+        return intFromBase(val, 64);
+    }
+
+    static int charToDigit(char character, String val) {
+        if (character >= '0' && character <= '9') {
+            return character - '0';
+        } else if (character >= 'a' && character <= 'z') {
+            return character - 'a' + 10;
+        } else if (character >= 'A' && character <= 'Z') {
+            return character - 'A' + 36;
+        } else if (character == '-') {
+            return 62;
+        } else if (character == '_') {
+            return 63;
+        } else {
+            throw new RuntimeException("invalid base encoding: " + val);
+        }
+    }
+
+    public static BigInteger bigIntegerFromBase(String val, int base) {
+        if (base > MAX_BASE) {
+                throw new RuntimeException(base + " outside base range of 2-" + MAX_BASE);
+        }
+        BigInteger rv = BigInteger.ZERO;
+        BigInteger biBase = BigInteger.valueOf(base);
+        char[] cv = val.toCharArray();
+        for (int i = 0; i < cv.length; i++) {
+            rv = rv.multiply(biBase);
+            char cvv = cv[i];
+            if (cvv >= '0' && cvv <= '9') {
+                rv = rv.add(bigIntegerChars[cvv - '0']);
+            } else if (cvv >= 'a' && cvv <= 'z') {
+                rv = rv.add(bigIntegerChars[cvv - 'a' + 10]);
+            } else if (cvv >= 'A' && cvv <= 'Z') {
+                rv = rv.add(bigIntegerChars[cvv - 'A' + 36]);
+            } else if (cvv == '-') {
+                rv = rv.add(bigIntegerChars[62]);
+            } else if (cvv == '_') {
+                rv = rv.add(bigIntegerChars[63]);
+            } else {
+                throw new RuntimeException("invalid base encoding: " + val);
+            }
+        }
+        return rv;
+    }
+
+    public static UUID UUIDFromBase64(String val) {
+        char[] cv = val.toCharArray();
+        long hiBits = 0;
+        int pos = 0;
+        for(int i = 0; i < 11; i++) {
+            hiBits <<= 6;
+            hiBits += charToDigit(cv[pos++], val);
+        }
+        int mixBits = charToDigit(cv[pos++], val);
+        hiBits <<= 2;
+        hiBits += (mixBits >>> 4);
+        /**
+         * loBits only needs to low 4 bits out of the 6 bits
+         * in mixBits but the high 2 bits are going to
+         * fall off anyway as a result of the left shift operations.
+         */
+        long loBits = mixBits;
+        for(int i = 0; i < 10; i++) {
+            loBits <<= 6;
+            loBits += charToDigit(cv[pos++], val);
+        }
+        return new UUID(hiBits, loBits);
+    }
+
+    public static String toBase(BigInteger val, int base) {
+        return toBase(val, base, -1);
+    }
+
+    public static String toBase(BigInteger val, int base, int minlen) {
+        if (base > MAX_BASE) {
+                throw new RuntimeException(base + " outside base range of 2-" + MAX_BASE);
+        }
+        char[] out = new char[128];
+        BigInteger biBase = BigInteger.valueOf(base);
+        for (int i = out.length - 1;; i--) {
+            BigInteger[] divAndRem = val.divideAndRemainder(biBase);
+            out[i] = basechars[Math.abs(divAndRem[1].intValue())];
+            val = divAndRem[0];
+            if (--minlen <= 0 && (val.equals(BigInteger.ZERO) || i == 0)) {
+                return new String(out, i, out.length - i);
+            }
+        }
+    }
+
+    public static String toBase64(UUID val) {
+        long hiBits = val.getMostSignificantBits();
+        long loBits = val.getLeastSignificantBits();
+        char[] out = new char[22];
+        int pos = 21;
+        for(int i = 0; i < 10; i++) {
+            out[pos--] = basechars[(int) (loBits & SIX_BIT_MASK)];
+            loBits >>>= 6;
+        }
+        int mixBits = (((int) (hiBits & 3)) << 4) | ((int) loBits);
+        out[pos--] = basechars[mixBits];
+        hiBits >>>= 2;
+        for(int i = 0; i < 11; i++) {
+            out[pos--] = basechars[(int) (hiBits & SIX_BIT_MASK)];
+            hiBits >>>= 6;
+        }
+        return new String(out);
+    }
+
+    public static String toBase36(BigInteger val) {
+        return toBase(val, 36).toUpperCase();
+    }
+
+    public static BigInteger bigIntegerFromBase36(String val) {
+        return bigIntegerFromBase(val.toLowerCase(), 36);
+    }
+
+    public static String toBase64(BigInteger val) {
+        return toBase(val, 64);
+    }
+
+    public static BigInteger bigIntegerFromBase64(String val) {
+        return bigIntegerFromBase(val, 64);
     }
 }

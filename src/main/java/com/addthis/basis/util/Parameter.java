@@ -40,7 +40,7 @@ public class Parameter {
             return defaultValue;
         }
         try {
-            return Numbers.parseHumanReadable(value);
+            return LessNumbers.parseHumanReadable(value);
         } catch (Exception ex) {
             return defaultValue;
         }

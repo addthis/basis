@@ -37,8 +37,8 @@ import com.google.common.io.ByteStreams;
 import com.google.common.net.UrlEscapers;
 import com.google.common.primitives.UnsignedBytes;
 
-public final class Bytes {
-    private Bytes() {}
+public final class LessBytes {
+    private LessBytes() {}
 
     /** @deprecated Use {@link StandardCharsets#UTF_8} */
     @Deprecated
@@ -907,7 +907,7 @@ public final class Bytes {
         boolean changed = false;
         for (int i = 0; i < c.length; i++) {
             if (c[i] == '%' && i < c.length - 2) {
-                if (Bytes.hex2dec(c[i + 1]) >= 0 && Bytes.hex2dec(c[i + 2]) >= 0) {
+                if (LessBytes.hex2dec(c[i + 1]) >= 0 && LessBytes.hex2dec(c[i + 2]) >= 0) {
                     vcount++;
                 }
             } else if (c[i] == '+') {
@@ -920,8 +920,8 @@ public final class Bytes {
             byte[] nc = new byte[c.length - vcount * 2];
             for (int i = 0; i < c.length; i++) {
                 if (c[i] == '%' && i < c.length - 2) {
-                    int hd1 = Bytes.hex2dec(c[i + 1]);
-                    int hd2 = Bytes.hex2dec(c[i + 2]);
+                    int hd1 = LessBytes.hex2dec(c[i + 1]);
+                    int hd2 = LessBytes.hex2dec(c[i + 2]);
                     if (hd1 >= 0 && hd2 >= 0) {
                         nc[pos++] = (byte) (((hd1 << 4) | hd2) & 0xff);
                         i += 2;

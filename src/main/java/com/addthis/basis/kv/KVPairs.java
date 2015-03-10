@@ -21,9 +21,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.addthis.basis.util.Bytes;
-import com.addthis.basis.util.Numbers;
-import com.addthis.basis.util.Strings;
+import com.addthis.basis.util.LessBytes;
+import com.addthis.basis.util.LessNumbers;
+import com.addthis.basis.util.LessStrings;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +66,7 @@ public class KVPairs implements Iterable<KVPair> {
         for (Iterator<KVPair> iter = values.elements(); iter.hasNext();) {
             KVPair kv = iter.next();
 
-            if (Strings.isEmpty(kv.getValue())) {
+            if (LessStrings.isEmpty(kv.getValue())) {
                 iter.remove();
             }
         }
@@ -226,8 +226,8 @@ public class KVPairs implements Iterable<KVPair> {
             for (String key : add.pairs.keySet()) {
                 KVPair newVal = add.getPair(key);
                 KVPair thisVal = getPair(key);
-                if ((newVal != null) && (!Strings.isEmpty(newVal.getValue()))) {
-                    if ((thisVal == null) || (Strings.isEmpty(thisVal.getValue()))) {
+                if ((newVal != null) && (!LessStrings.isEmpty(newVal.getValue()))) {
+                    if ((thisVal == null) || (LessStrings.isEmpty(thisVal.getValue()))) {
                         addPair(newVal);
                     }
                 }
@@ -422,7 +422,7 @@ public class KVPairs implements Iterable<KVPair> {
      */
     public int takeValue(String key, int def, int base) {
         String val = takeValue(key);
-        return (val != null ? Numbers.parseInt(val, def, base) : def);
+        return (val != null ? LessNumbers.parseInt(val, def, base) : def);
     }
 
     /**
@@ -432,7 +432,7 @@ public class KVPairs implements Iterable<KVPair> {
      */
     public float takeValue(String key, float def) {
         String val = takeValue(key);
-        return (val != null ? Numbers.parseFloat(val, def) : def);
+        return (val != null ? LessNumbers.parseFloat(val, def) : def);
     }
 
     /**
@@ -450,7 +450,7 @@ public class KVPairs implements Iterable<KVPair> {
      */
     public long takeValue(String key, long def, int base) {
         String val = takeValue(key);
-        return (val != null ? Numbers.parseLong(val, def, base) : def);
+        return (val != null ? LessNumbers.parseLong(val, def, base) : def);
     }
 
     /**
@@ -526,7 +526,7 @@ public class KVPairs implements Iterable<KVPair> {
      */
     public int getIntValue(int radix, String key, int def) {
         KVPair pair = getPair(key);
-        return pair != null ? Numbers.parseInt(pair.getValue(), def, radix) : def;
+        return pair != null ? LessNumbers.parseInt(pair.getValue(), def, radix) : def;
     }
 
     /**
@@ -550,17 +550,17 @@ public class KVPairs implements Iterable<KVPair> {
      */
     public long getLongValue(int radix, String key, long def) {
         KVPair pair = getPair(key);
-        return pair != null ? Numbers.parseLong(pair.getValue(), def, radix) : def;
+        return pair != null ? LessNumbers.parseLong(pair.getValue(), def, radix) : def;
     }
 
     public float getFloatValue(String key, float def) {
         String val = getValue(key);
-        return val != null ? Numbers.parseFloat(val, def) : def;
+        return val != null ? LessNumbers.parseFloat(val, def) : def;
     }
 
     public double getDoubleValue(String key, double def) {
         String val = getValue(key);
-        return val != null ? Numbers.parseDouble(val, def) : def;
+        return val != null ? LessNumbers.parseDouble(val, def) : def;
     }
 
     /**
@@ -636,8 +636,8 @@ public class KVPairs implements Iterable<KVPair> {
         ArrayList<byte[]> arr = new ArrayList<>(count() * 2);
         for (KVPair kv : values()) {
             String v = kv.getValue();
-            byte key[] = Bytes.toBytes(kv.getKey());
-            byte val[] = v != null ? Bytes.toBytes(kv.getValue()) : new byte[0];
+            byte key[] = LessBytes.toBytes(kv.getKey());
+            byte val[] = v != null ? LessBytes.toBytes(kv.getValue()) : new byte[0];
             size += key.length + val.length;
             arr.add(key);
             arr.add(val);

@@ -13,8 +13,8 @@
  */
 package com.addthis.basis.kv;
 
-import com.addthis.basis.util.Bytes;
-import com.addthis.basis.util.Strings;
+import com.addthis.basis.util.LessBytes;
+import com.addthis.basis.util.LessStrings;
 
 /**
  * Class that represents a key/value pair.  Has helpers for parsing
@@ -48,12 +48,12 @@ public class KVPair {
             return null;
         }
         if (sep < 0) {
-            return new KVPair(Bytes.urldecode(str), "");
+            return new KVPair(LessBytes.urldecode(str), "");
         }
         if (sep < str.length() - 1) {
-            return new KVPair(Bytes.urldecode(str.substring(0, sep)), Bytes.urldecode(str.substring(sep + 1)));
+            return new KVPair(LessBytes.urldecode(str.substring(0, sep)), LessBytes.urldecode(str.substring(sep + 1)));
         }
-        return new KVPair(Bytes.urldecode(str.substring(0, sep)), "");
+        return new KVPair(LessBytes.urldecode(str.substring(0, sep)), "");
     }
 
     /**
@@ -143,9 +143,9 @@ public class KVPair {
      */
     public String toQuotedKeyString() {
         if (val == null) {
-            return Strings.cat("\"", Bytes.urlencode(key), "\"=");
+            return LessStrings.cat("\"", LessBytes.urlencode(key), "\"=");
         } else {
-            return Strings.cat("\"", Bytes.urlencode(key), "\"=", Bytes.urlencode(val));
+            return LessStrings.cat("\"", LessBytes.urlencode(key), "\"=", LessBytes.urlencode(val));
         }
     }
 
@@ -154,9 +154,9 @@ public class KVPair {
      */
     public String toString() {
         if (val == null) {
-            return Strings.cat(Bytes.urlencode(key), "=");
+            return LessStrings.cat(LessBytes.urlencode(key), "=");
         } else {
-            return Strings.cat(Bytes.urlencode(key), "=", Bytes.urlencode(val));
+            return LessStrings.cat(LessBytes.urlencode(key), "=", LessBytes.urlencode(val));
         }
     }
 

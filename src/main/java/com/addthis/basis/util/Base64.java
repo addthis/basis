@@ -35,11 +35,11 @@ public class Base64 {
      * @return A String with the Base64 encoded data.
      */
     public static String encode(String s) {
-        return base64.encode(Bytes.toBytes(s));
+        return base64.encode(LessBytes.toBytes(s));
     }
 
     public static String encodeURLSafe(String s) {
-        return base64Url.encode(Bytes.toBytes(s));
+        return base64Url.encode(LessBytes.toBytes(s));
     }
 
     /**
@@ -66,7 +66,7 @@ public class Base64 {
      * @throws IllegalArgumentException if the input is not valid Base64 encoded data.
      */
     public static String decode(String s) {
-        return Bytes.toString(base64.decode(s));
+        return LessBytes.toString(base64.decode(s));
     }
 
     public static String decode(String s, boolean strict) {
@@ -74,7 +74,7 @@ public class Base64 {
     }
 
     public static String decodeURLSafe(String s) {
-        return Bytes.toString(base64Url.decode(s));
+        return LessBytes.toString(base64Url.decode(s));
     }
 
     public static String decodeURLSafe(String s, boolean strict) {

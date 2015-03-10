@@ -20,10 +20,12 @@ import java.net.URLEncoder;
 
 import java.util.Objects;
 
-public final class Strings {
+public final class LessStrings {
     public static final String pad = "                                                      ";
     public static final String pad0 = "0000000000000000000000000000000000000000000000000000000";
     private static final int maxDecodingRounds = 20;
+
+    private LessStrings() {}
 
     public static String padright(String str, int len) {
         return padright(str, len, pad);
@@ -254,13 +256,13 @@ public final class Strings {
         if (raw == null) {
             return "";
         }
-        byte[] nmsg = Bytes.toBytes(raw);
+        byte[] nmsg = LessBytes.toBytes(raw);
         for (int i = 0; i < nmsg.length; i++) {
             if (nmsg[i] < 32 || nmsg[i] > 126) {
                 nmsg[i] = '_';
             }
         }
-        return Bytes.toString(nmsg);
+        return LessBytes.toString(nmsg);
     }
 
     public static String printable(byte[] msg) {
@@ -271,7 +273,7 @@ public final class Strings {
         for (int i = 0; i < msg.length; i++) {
             nmsg[i] = (msg[i] < 32 || msg[i] > 126) ? (byte) '_' : msg[i];
         }
-        return Bytes.toString(nmsg);
+        return LessBytes.toString(nmsg);
     }
 
     /**
@@ -314,7 +316,7 @@ public final class Strings {
      * @return The escaped string.
      */
     public static String xmlEscape(String string) {
-        if (Strings.isEmpty(string)) {
+        if (LessStrings.isEmpty(string)) {
             return string;
         }
         StringBuilder sb = new StringBuilder();

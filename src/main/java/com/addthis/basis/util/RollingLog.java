@@ -57,7 +57,7 @@ public class RollingLog extends OutputStream implements FileLogger {
 
     public RollingLog(File dir, String pre, String suf, boolean compress, long maxSize, long maxAge) {
         dir.mkdirs();
-        this.dir = Files.initDirectory(dir);
+        this.dir = LessFiles.initDirectory(dir);
         this.prefix = pre != null ? pre : "";
         this.suffix = suf != null ? suf : "";
         if (prefix != "" && !prefix.endsWith("-")) {
@@ -97,7 +97,7 @@ public class RollingLog extends OutputStream implements FileLogger {
     public synchronized void writeLine(String line) {
         if (loggingEnabled) {
             try {
-                write(Bytes.toBytes(line));
+                write(LessBytes.toBytes(line));
                 write('\n');
             } catch (IOException e) {
                 log.debug("error writing to log file", e);

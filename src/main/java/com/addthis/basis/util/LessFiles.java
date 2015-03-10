@@ -26,11 +26,11 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class Files {
+public final class LessFiles {
 
     private static final boolean useStackTraceTempDirname = Parameter.boolValue("debug.tempdir.stacktrace", false);
 
-    private Files() {}
+    private LessFiles() {}
 
     /* Deletes all files and subdirectories under dir.
      * Returns true if all deletions were successful.
@@ -59,7 +59,7 @@ public final class Files {
 
     public static void write(String path, byte[] data, boolean append) throws IOException {
         File f = new File(path);
-        Files.write(f, data, append);
+        LessFiles.write(f, data, append);
     }
 
     /**
@@ -76,7 +76,7 @@ public final class Files {
      */
     public static byte[] read(File in) throws IOException {
         try (FileInputStream fin = new FileInputStream(in)) {
-            return Bytes.readFully(fin);
+            return LessBytes.readFully(fin);
         }
     }
 

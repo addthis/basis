@@ -33,8 +33,8 @@ public class SimpleExec {
     public SimpleExec join() throws InterruptedException, IOException {
         InputStream stdoutIn = process.getInputStream();
         InputStream stderrIn = process.getErrorStream();
-        stdout = Bytes.readFully(stdoutIn);
-        stderr = Bytes.readFully(stderrIn);
+        stdout = LessBytes.readFully(stdoutIn);
+        stderr = LessBytes.readFully(stderrIn);
         exit = process.waitFor();
         return this;
     }
@@ -44,7 +44,7 @@ public class SimpleExec {
     }
 
     public String stdoutString() {
-        return Bytes.toString(stdout);
+        return LessBytes.toString(stdout);
     }
 
     public byte[] stderr() {
@@ -52,7 +52,7 @@ public class SimpleExec {
     }
 
     public String stderrString() {
-        return Bytes.toString(stderr);
+        return LessBytes.toString(stderr);
     }
 
     public int exitCode() {

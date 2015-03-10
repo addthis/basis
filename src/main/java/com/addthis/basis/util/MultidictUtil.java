@@ -64,7 +64,7 @@ public class MultidictUtil {
      * @return reference to the map for convenience
      */
     public static Multimap<String, String> parseParam(String str, Multimap<String, String> map) {
-        if (Strings.isEmpty(str)) {
+        if (LessStrings.isEmpty(str)) {
             return map;
         }
         int sep = str.indexOf('=');

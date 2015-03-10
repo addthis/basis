@@ -13,8 +13,8 @@
  */
 package com.addthis.basis.kv;
 
-import com.addthis.basis.util.Bytes;
-import com.addthis.basis.util.Strings;
+import com.addthis.basis.util.LessBytes;
+import com.addthis.basis.util.LessStrings;
 
 public class KAPair extends KVPair {
 
@@ -62,7 +62,7 @@ public class KAPair extends KVPair {
         }
         String[] enc = new String[vals.length];
         for (int i = 0; i < vals.length; i++) {
-            enc[i] = Bytes.urlencode(vals[i]);
+            enc[i] = LessBytes.urlencode(vals[i]);
         }
         return enc;
     }
@@ -70,9 +70,9 @@ public class KAPair extends KVPair {
     @Override
     public String toString() {
         if (vals == null) {
-            return Strings.cat(Bytes.urlencode(key), "=");
+            return LessStrings.cat(LessBytes.urlencode(key), "=");
         } else {
-            return Strings.cat(Bytes.urlencode(key), "=", join(encode(vals)));
+            return LessStrings.cat(LessBytes.urlencode(key), "=", join(encode(vals)));
         }
     }
 

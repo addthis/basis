@@ -26,17 +26,17 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class BytesTest {
+public class LessBytesTest {
     @Test
     public void test1() throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         int check[] = new int[]{5, 100, 4, 400, 3, 600, 2, 1, 0, 200, 1, 700, 2, 100, 3};
         for (int i : check) {
-            Bytes.writeBytes(new byte[i], out);
+            LessBytes.writeBytes(new byte[i], out);
         }
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
         for (int i : check) {
-            byte b[] = Bytes.readBytes(in);
+            byte b[] = LessBytes.readBytes(in);
             Assert.assertEquals(b.length, i);
         }
     }
@@ -46,12 +46,12 @@ public class BytesTest {
         System.setProperty("nativeURLCodec", "0");
         String rawString = "my ô&test%26£str";
         String testURLEnc = URLEncoder.encode(rawString, "UTF-8");
-        String encodedString = Bytes.urlencode(rawString);
+        String encodedString = LessBytes.urlencode(rawString);
         assertEquals(testURLEnc, encodedString);
 
         String rawString2 = "изображение";
         String testURLEnc2 = URLEncoder.encode(rawString2, "UTF-8");
-        String encodedString2 = Bytes.urlencode(rawString2);
+        String encodedString2 = LessBytes.urlencode(rawString2);
         assertEquals(testURLEnc2, encodedString2);
     }
 
@@ -60,12 +60,12 @@ public class BytesTest {
         System.setProperty("nativeURLCodec", "1");
         String rawString = "my ô&test%26£str";
         String testURLEnc = URLEncoder.encode(rawString, "UTF-8");
-        String encodedString = Bytes.urlencode(rawString);
+        String encodedString = LessBytes.urlencode(rawString);
         assertEquals(testURLEnc, encodedString);
 
         String rawString2 = "изображение";
         String testURLEnc2 = URLEncoder.encode(rawString2, "UTF-8");
-        String encodedString2 = Bytes.urlencode(rawString2);
+        String encodedString2 = LessBytes.urlencode(rawString2);
         assertEquals(testURLEnc2, encodedString2);
     }
 
@@ -74,12 +74,12 @@ public class BytesTest {
         System.setProperty("nativeURLCodec", "0");
         String rawString = "my ô&test%26£str";
         String testURLEnc = URLDecoder.decode(rawString, "UTF-8");
-        String encodedString = Bytes.urldecode(rawString);
+        String encodedString = LessBytes.urldecode(rawString);
         assertEquals(testURLEnc, encodedString);
 
         String rawString2 = "изображение";
         String testURLEnc2 = URLDecoder.decode(rawString2, "UTF-8");
-        String encodedString2 = Bytes.urldecode(rawString2);
+        String encodedString2 = LessBytes.urldecode(rawString2);
         assertEquals(testURLEnc2, encodedString2);
     }
 
@@ -88,12 +88,12 @@ public class BytesTest {
         System.setProperty("nativeURLCodec", "1");
         String rawString = "my ô&test%26£str";
         String testURLEnc = URLDecoder.decode(rawString, "UTF-8");
-        String encodedString = Bytes.urldecode(rawString);
+        String encodedString = LessBytes.urldecode(rawString);
         assertEquals(testURLEnc, encodedString);
 
         String rawString2 = "изображение";
         String testURLEnc2 = URLDecoder.decode(rawString2, "UTF-8");
-        String encodedString2 = Bytes.urldecode(rawString2);
+        String encodedString2 = LessBytes.urldecode(rawString2);
         assertEquals(testURLEnc2, encodedString2);
     }
 
@@ -177,8 +177,8 @@ public class BytesTest {
     public void testWriteLength() throws Exception {
         for (long l = 0; l < 10000000; l += 10) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            Bytes.writeLength(l, bos);
-            long v = Bytes.readLength(new ByteArrayInputStream(bos.toByteArray()));
+            LessBytes.writeLength(l, bos);
+            long v = LessBytes.readLength(new ByteArrayInputStream(bos.toByteArray()));
             assertTrue("mismatch input=" + l + " output=" + v, l == v);
         }
     }
@@ -190,7 +190,7 @@ public class BytesTest {
     public void testConversion_bytes_chars() {
         char[] oldValues = new char[]{0x0011, 0x2233};
         // to bytes then back should result in the same values
-        char[] newValues = Bytes.toChars(Bytes.toBytes(oldValues));
+        char[] newValues = LessBytes.toChars(LessBytes.toBytes(oldValues));
         assertArrayEquals(oldValues, newValues);
     }
 
@@ -200,7 +200,7 @@ public class BytesTest {
     @Test
     public void testConversion_bytes_ints() {
         int[] oldValues = new int[]{0x00112233, 0x44556677};
-        int[] newValues = Bytes.toInts(Bytes.toBytes(oldValues));
+        int[] newValues = LessBytes.toInts(LessBytes.toBytes(oldValues));
         assertArrayEquals(oldValues, newValues);
     }
 }
