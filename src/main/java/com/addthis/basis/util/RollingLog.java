@@ -28,7 +28,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RollingLog extends OutputStream implements IFileLogger {
+public class RollingLog extends OutputStream implements FileLogger {
     protected static final Logger log = LoggerFactory.getLogger(RollingLog.class);
     private final DateTimeFormatter format = DateTimeFormat.forPattern("yyyyMMdd-HHmmss");
 

@@ -30,6 +30,8 @@ public final class Files {
 
     private static final boolean useStackTraceTempDirname = Parameter.boolValue("debug.tempdir.stacktrace", false);
 
+    private Files() {}
+
     /* Deletes all files and subdirectories under dir.
      * Returns true if all deletions were successful.
      * If a deletion fails, the method attempting to complete the delete but returns false.
