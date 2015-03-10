@@ -79,7 +79,7 @@ public final class Strings {
 
     public static String[] splitArray(String str, String sep) {
         StringSplitter ss = new StringSplitter(str, sep);
-        String s[] = new String[ss.countTokens()];
+        String[] s = new String[ss.countTokens()];
         for (int i = 0; i < s.length; i++) {
             s[i] = ss.nextToken();
         }
@@ -121,11 +121,11 @@ public final class Strings {
         return true;
     }
 
-    public static boolean contains(String haystack[], String needle) {
+    public static boolean contains(String[] haystack, String needle) {
         return contains(haystack, needle, false);
     }
 
-    public static boolean contains(String haystack[], String needle, boolean ignoreCase) {
+    public static boolean contains(String[] haystack, String needle, boolean ignoreCase) {
         for (String hay : haystack) {
             if (hay != null && (ignoreCase ? needle.equalsIgnoreCase(hay) : needle.equals(hay))) {
                 return true;
@@ -218,7 +218,7 @@ public final class Strings {
     }
 
     /** */
-    public static String join(Object s[], String j) {
+    public static String join(Object[] s, String j) {
         StringBuilder sb = new StringBuilder();
         for (Object p : s) {
             if (sb.length() > 0) {
@@ -254,7 +254,7 @@ public final class Strings {
         if (raw == null) {
             return "";
         }
-        byte nmsg[] = Bytes.toBytes(raw);
+        byte[] nmsg = Bytes.toBytes(raw);
         for (int i = 0; i < nmsg.length; i++) {
             if (nmsg[i] < 32 || nmsg[i] > 126) {
                 nmsg[i] = '_';
@@ -263,11 +263,11 @@ public final class Strings {
         return Bytes.toString(nmsg);
     }
 
-    public static String printable(byte msg[]) {
+    public static String printable(byte[] msg) {
         if (msg == null) {
             return "";
         }
-        byte nmsg[] = new byte[msg.length];
+        byte[] nmsg = new byte[msg.length];
         for (int i = 0; i < msg.length; i++) {
             nmsg[i] = (msg[i] < 32 || msg[i] > 126) ? (byte) '_' : msg[i];
         }
@@ -288,7 +288,7 @@ public final class Strings {
     }
 
     public static String remove(String s, char c) {
-        char sa[] = s.toCharArray();
+        char[] sa = s.toCharArray();
         int j = 0;
         for (int i = 0; i < sa.length; i++) {
             if (sa[i] != c) {
