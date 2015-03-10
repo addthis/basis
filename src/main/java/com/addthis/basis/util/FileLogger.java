@@ -20,7 +20,7 @@ package com.addthis.basis.util;
  * nice things.  In general, log4j, slf4j, etc should be preferred to
  * this.
  */
-public interface IFileLogger {
+public interface FileLogger {
 
     public boolean isLogging();
 
