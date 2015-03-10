@@ -55,7 +55,7 @@ public final class Files {
         return rval;
     }
 
-    public static void write(String path, byte data[], boolean append) throws IOException {
+    public static void write(String path, byte[] data, boolean append) throws IOException {
         File f = new File(path);
         Files.write(f, data, append);
     }
@@ -63,20 +63,19 @@ public final class Files {
     /**
      * write bytes to a file with the option to append
      */
-    public static void write(File out, byte data[], boolean append) throws IOException {
-        FileOutputStream fot = new FileOutputStream(out, append);
-        fot.write(data);
-        fot.close();
+    public static void write(File out, byte[] data, boolean append) throws IOException {
+        try (FileOutputStream fot = new FileOutputStream(out, append)) {
+            fot.write(data);
+        }
     }
 
     /**
      * read all bytes from a file
      */
     public static byte[] read(File in) throws IOException {
-        FileInputStream fin = new FileInputStream(in);
-        byte data[] = Bytes.readFully(fin);
-        fin.close();
-        return data;
+        try (FileInputStream fin = new FileInputStream(in)) {
+            return Bytes.readFully(fin);
+        }
     }
 
     /**
@@ -167,18 +166,18 @@ public final class Files {
         File uid = new File(dir, uidFileName);
         String guid = CUID.createCUID();
         if (uid.exists() && uid.isFile() && uid.canRead()) {
-            FileReader fr = new FileReader(uid);
-            BufferedReader br = new BufferedReader(fr);
-            guid = br.readLine();
-            if (guid == null || guid.trim().length() == 0) {
-                guid = CUID.createCUID();
+            try (FileReader fr = new FileReader(uid)) {
+                BufferedReader br = new BufferedReader(fr);
+                guid = br.readLine();
+                if ((guid == null) || guid.trim().isEmpty()) {
+                    guid = CUID.createCUID();
+                }
             }
-            fr.close();
         }
-        FileOutputStream fos = new FileOutputStream(uid);
-        fos.write(guid.getBytes());
-        fos.flush();
-        fos.close();
+        try (FileOutputStream fos = new FileOutputStream(uid)) {
+            fos.write(guid.getBytes());
+            fos.flush();
+        }
         return guid;
     }
 
@@ -192,9 +191,9 @@ public final class Files {
         if (size > file.length()) {
             throw new IllegalArgumentException("file " + file.getName() + " cannot be truncated, desired size (" + size + ") is greater than file length.");
         }
-        RandomAccessFile raf = new RandomAccessFile(file, "rw");
-        raf.setLength(size);
-        raf.close();
+        try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+            raf.setLength(size);
+        }
     }
 
     public static void expandPath(String root, List<File> expanded) {
@@ -204,9 +203,9 @@ public final class Files {
             String right = off + 3 < root.length() ? root.substring(off + 3, root.length()) : "";
             File dir = new File(left);
             if (dir.exists() && dir.isDirectory()) {
-                File files[] = dir.listFiles();
+                File[] files = dir.listFiles();
                 for (File file : files) {
-                    expandPath(left.concat("/").concat(file.getName()).concat("/").concat(right), expanded);
+                    expandPath(left + "/" + file.getName() + "/" + right, expanded);
                 }
             }
         } else {
