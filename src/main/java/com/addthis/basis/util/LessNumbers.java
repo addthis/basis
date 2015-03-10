@@ -166,7 +166,7 @@ public class LessNumbers {
     /**
      * Array of chars for generating numbers in alternate bases.
      */
-    static final char[] basechars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+    static final char[] basechars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_".toCharArray();
     static final BigInteger[] bigIntegerChars = new BigInteger[basechars.length];
     static {
         int offset = 0;
