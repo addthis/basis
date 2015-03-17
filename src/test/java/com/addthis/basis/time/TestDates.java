@@ -103,7 +103,7 @@ public class TestDates {
 
     @Test
     public void testTruncateInterval() {
-        DateTime end = new DateTime();
+        DateTime end = new DateTime().minusHours(1);
         Interval interval;
 
         for (DTimeUnit per : types) {
