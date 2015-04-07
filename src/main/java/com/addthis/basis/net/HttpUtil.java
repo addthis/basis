@@ -197,17 +197,7 @@ public class HttpUtil {
      */
     public static HttpResponse execute(HttpUriRequest request, int timeoutms)
             throws IOException {
-        HttpClientBuilder builder = HttpClientBuilder.create();
-        CloseableHttpResponse response = null;
-        try (CloseableHttpClient client = makeCloseableHttpClient(timeoutms, 0, Optional.absent())) {
-            response = client.execute(request);
-            return new HttpResponse(response);
-        } finally {
-            if (response != null) {
-                response.close();
-            }
-
-        }
+        return execute(request, timeoutms, Optional.absent());
     }
 
     /**
