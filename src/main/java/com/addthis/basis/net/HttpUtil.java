@@ -84,7 +84,7 @@ public class HttpUtil {
                 get.addHeader(entry.getKey(), entry.getValue());
             }
         }
-        return execute(get, timeoutms, Optional.absent());
+        return execute(get, timeoutms);
     }
 
     /**
@@ -114,7 +114,7 @@ public class HttpUtil {
      */
     public static HttpResponse httpPost(String url, String contentType, byte[] content, int timeoutms)
             throws IOException {
-        return execute(makePost(url, contentType, content), timeoutms, Optional.absent());
+        return execute(makePost(url, contentType, content), timeoutms);
     }
 
     /**
@@ -129,7 +129,7 @@ public class HttpUtil {
      */
     public static HttpResponse httpPost(String url, String charset, Map<String, String> content, int timeoutms)
             throws IOException {
-        return execute(makePost(url, charset, content), timeoutms, Optional.absent());
+        return execute(makePost(url, charset, content), timeoutms);
     }
 
     /**
@@ -235,7 +235,7 @@ public class HttpUtil {
     public static HttpResponse execute(HttpUriRequest request, int timeoutms, int numRetries)
             throws IOException {
         CloseableHttpResponse response = null;
-        try (CloseableHttpClient client = makeCloseableHttpClient(timeoutms, numRetries, Optional.absent())) {
+        try (CloseableHttpClient client = makeCloseableHttpClient(timeoutms, numRetries)) {
             response = client.execute(request);
             return new HttpResponse(response);
         } finally {
@@ -276,7 +276,7 @@ public class HttpUtil {
                                        int numThreads, int timeoutms, int numRetries) {
         List<Method> responses = new ArrayList<>();
         ExecutorService executor = Executors.newFixedThreadPool(Math.min(numThreads, requests.size()));
-        CloseableHttpClient client = makeCloseableHttpClient(timeoutms, numRetries, Optional.absent());
+        CloseableHttpClient client = makeCloseableHttpClient(timeoutms, numRetries);
         try {
             for (int i = 0; i < requests.size(); i++) {
                 Method method = new Method(client, requests.get(i), timeoutms);
@@ -312,6 +312,17 @@ public class HttpUtil {
      * Internal function to create http clients for fetching
      * @param timeoutms The timeout, which is applied to the connect, connection request, and socket timeouts. Ignored if <=0
      * @param numRetries The number of retries. Ignored if <0
+     * @return A CloseableHttpClient with the specified parameters set
+     */
+    private static CloseableHttpClient makeCloseableHttpClient(int timeoutms, int numRetries){
+        return makeCloseableHttpClient(timeoutms,numRetries, Optional.absent());
+    }
+
+    /**
+     * Internal function to create http clients for fetching
+     * @param timeoutms The timeout, which is applied to the connect, connection request, and socket timeouts. Ignored if <=0
+     * @param numRetries The number of retries. Ignored if <0
+     * @param credentials optional credentials provider to be used for authentication
      * @return A CloseableHttpClient with the specified parameters set
      */
     private static CloseableHttpClient makeCloseableHttpClient(int timeoutms, int numRetries, Optional<CredentialsProvider> credentials) {
