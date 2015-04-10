@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.addthis.basis.net.http.HttpResponse;
 
+import com.google.common.base.Optional;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.CredentialsProvider;
@@ -83,7 +84,7 @@ public class HttpUtil {
                 get.addHeader(entry.getKey(), entry.getValue());
             }
         }
-        return execute(get, timeoutms, null);
+        return execute(get, timeoutms, Optional.absent());
     }
 
     /**
@@ -113,7 +114,7 @@ public class HttpUtil {
      */
     public static HttpResponse httpPost(String url, String contentType, byte[] content, int timeoutms)
             throws IOException {
-        return execute(makePost(url, contentType, content), timeoutms, null);
+        return execute(makePost(url, contentType, content), timeoutms, Optional.absent());
     }
 
     /**
@@ -128,7 +129,7 @@ public class HttpUtil {
      */
     public static HttpResponse httpPost(String url, String charset, Map<String, String> content, int timeoutms)
             throws IOException {
-        return execute(makePost(url, charset, content), timeoutms, null);
+        return execute(makePost(url, charset, content), timeoutms, Optional.absent());
     }
 
     /**
@@ -196,7 +197,7 @@ public class HttpUtil {
      */
     public static HttpResponse execute(HttpUriRequest request, int timeoutms)
             throws IOException {
-        return execute(request, timeoutms, null);
+        return execute(request, timeoutms, Optional.absent());
     }
 
     /**
@@ -204,11 +205,11 @@ public class HttpUtil {
      *
      * @param request   method to execute
      * @param timeoutms request timeout (use 0 to ignore)
-     * @param credentials - credentialsProvider for http endpoints that require authentication - Ignored if null
+     * @param credentials credentials Provider to build with Http Client. Useful for endpoints that require api tokens
      * @return completed request
      * @throws IOException
      */
-    public static HttpResponse execute(HttpUriRequest request, int timeoutms, CredentialsProvider credentials)
+    public static HttpResponse execute(HttpUriRequest request, int timeoutms, Optional<CredentialsProvider> credentials)
             throws IOException {
         CloseableHttpResponse response = null;
         try (CloseableHttpClient client = makeCloseableHttpClient(timeoutms, 0, credentials)) {
@@ -234,7 +235,7 @@ public class HttpUtil {
     public static HttpResponse execute(HttpUriRequest request, int timeoutms, int numRetries)
             throws IOException {
         CloseableHttpResponse response = null;
-        try (CloseableHttpClient client = makeCloseableHttpClient(timeoutms, numRetries, null)) {
+        try (CloseableHttpClient client = makeCloseableHttpClient(timeoutms, numRetries, Optional.absent())) {
             response = client.execute(request);
             return new HttpResponse(response);
         } finally {
@@ -275,7 +276,7 @@ public class HttpUtil {
                                        int numThreads, int timeoutms, int numRetries) {
         List<Method> responses = new ArrayList<>();
         ExecutorService executor = Executors.newFixedThreadPool(Math.min(numThreads, requests.size()));
-        CloseableHttpClient client = makeCloseableHttpClient(timeoutms, numRetries, null);
+        CloseableHttpClient client = makeCloseableHttpClient(timeoutms, numRetries, Optional.absent());
         try {
             for (int i = 0; i < requests.size(); i++) {
                 Method method = new Method(client, requests.get(i), timeoutms);
@@ -311,12 +312,11 @@ public class HttpUtil {
      * Internal function to create http clients for fetching
      * @param timeoutms The timeout, which is applied to the connect, connection request, and socket timeouts. Ignored if <=0
      * @param numRetries The number of retries. Ignored if <0
-     * @param credentials - credentialsProvider for http endpoints that require authentication - Ignored if null
      * @return A CloseableHttpClient with the specified parameters set
      */
-    private static CloseableHttpClient makeCloseableHttpClient(int timeoutms, int numRetries, CredentialsProvider credentials) {
+    private static CloseableHttpClient makeCloseableHttpClient(int timeoutms, int numRetries, Optional<CredentialsProvider> credentials) {
         HttpClientBuilder builder = HttpClientBuilder.create();
-        if(credentials != null) { builder.setDefaultCredentialsProvider(credentials); }
+        if(credentials.isPresent()) { builder.setDefaultCredentialsProvider(credentials.get()); }
         if (numRetries >= 0) {
             DefaultHttpRequestRetryHandler retryHandler =
                     new DefaultHttpRequestRetryHandler(numRetries, false);
