@@ -30,7 +30,11 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Class that represents a collection of key/value pairs.
+ *
+ * What was going on when this class was implemented?
+ * It has been deprecated and is being phased out of use.
  */
+@Deprecated
 public class KVPairs implements Iterable<KVPair> {
     protected static final Logger log = LoggerFactory.getLogger(KVPairs.class);
     private static final boolean putupper = System.getProperty("kv.putupper", "1").equals("1");
