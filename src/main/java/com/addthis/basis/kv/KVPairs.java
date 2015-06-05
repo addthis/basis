@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
  * Class that represents a collection of key/value pairs.
  *
  * What was going on when this class was implemented?
- * It has been deprecated and is being phased out of use.
- * Consider using the <a href="http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/collect/Multimap.html">Multimap</a>
+ * @deprecated Consider using the
+ * <a href="http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/collect/Multimap.html">Multimap</a>
  * interface.
  */
 @Deprecated
