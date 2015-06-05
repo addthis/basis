@@ -33,6 +33,8 @@ import org.slf4j.LoggerFactory;
  *
  * What was going on when this class was implemented?
  * It has been deprecated and is being phased out of use.
+ * Consider using the <a href="http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/collect/Multimap.html">Multimap</a>
+ * interface.
  */
 @Deprecated
 public class KVPairs implements Iterable<KVPair> {
