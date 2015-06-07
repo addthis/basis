@@ -33,6 +33,8 @@ public class LessNumbersTest extends TestCase {
         assertEquals(0, LessNumbers.intFromBase36("0"));
         assertEquals(22, LessNumbers.intFromBase36("M"));
         assertEquals(481261, LessNumbers.intFromBase36("abcd"));
+        assertEquals(62, LessNumbers.intFromBase64("-"));
+        assertEquals(63, LessNumbers.intFromBase64("_"));
 
         assertEquals(0, LessNumbers.bigIntegerFromBase36("000000").intValue());
         assertEquals(1, LessNumbers.bigIntegerFromBase36("000001").intValue());

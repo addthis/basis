@@ -150,15 +150,7 @@ public class LessNumbers {
         char[] cv = val.toCharArray();
         for (char aCv : cv) {
             rv *= base;
-            if (aCv >= '0' && aCv <= '9') {
-                rv += aCv - '0';
-            } else if (aCv >= 'a' && aCv <= 'z') {
-                rv += aCv - 'a' + 10;
-            } else if (aCv >= 'A' && aCv <= 'Z') {
-                rv += aCv - 'A' + 36;
-            } else {
-                throw new RuntimeException("invalid base encoding: " + val);
-            }
+            rv += charToDigit(aCv, val);
         }
         return rv;
     }
