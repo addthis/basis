@@ -177,7 +177,8 @@ public class DiskBackedQueue<E> implements Closeable {
          * If true then store the serialized representation of objects
          * along with the objects themselves. This improves
          * disk-writing performance at the cost of additional memory overhead.
-         * This parameter is required.
+         * This parameter is required. Memory doubling is ignored
+         * when {@link #put(Object, byte[])} is called with a null byte array.
          */
         public Builder setMemoryDouble(boolean enable) {
             this.memoryDouble = enable;
