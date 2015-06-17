@@ -36,11 +36,11 @@ import com.google.common.base.Preconditions;
  * will write the contents of the queue to the external storage.
  *
  * <p>This implements a disk-backed queue however it is possible to set a maximum
- * capacity on disk using the {@link Builder#setDiskMaxCapacity(int)} parameter.
+ * capacity on disk using the {@link Builder#setDiskMaxBytes(long)} parameter.
  * If the maximum disk capacity is exceeded then insertion operations will either
  * block or throw an exception depending on whether the blocking or non-blocking
  * operation is invoked. The disk capacity restriction can be removed by setting the
- * disk max capacity to 0.
+ * disk max bytes to 0.
  *
  * <p>The class exposes the API of the data structure and the Builder class to construct
  * instances. Nearly all parameter are required to the Builder object.
@@ -61,7 +61,7 @@ public class DiskBackedQueue<E> implements Closeable {
         private int pageSize = -1;
         private int memMinCapacity = -1;
         private int memMaxCapacity = -1;
-        private int diskMaxCapacity = -1;
+        private long diskMaxBytes = -1;
         private int numBackgroundThreads = -1;
         private int compressionLevel = 9;
         private int compressionBuffer = 1024;
@@ -111,11 +111,11 @@ public class DiskBackedQueue<E> implements Closeable {
         }
 
         /**
-         * Maximum number of elements that are allowed to be stored
+         * Maximum number of bytes that are allowed to be stored
          * on disk. Set to 0 to specify no upper bound. This parameter is required.
          */
-        public Builder setDiskMaxCapacity(int capacity) {
-            this.diskMaxCapacity = capacity;
+        public Builder setDiskMaxBytes(long bytes) {
+            this.diskMaxBytes = bytes;
             return this;
         }
 
@@ -217,7 +217,7 @@ public class DiskBackedQueue<E> implements Closeable {
             Preconditions.checkArgument(pageSize > 0, "pageSize must be > 0");
             Preconditions.checkArgument(memMinCapacity > 0, "memMinCapacity must be > 0");
             Preconditions.checkArgument(memMaxCapacity > 0, "memMaxCapacity must be > 0");
-            Preconditions.checkArgument(diskMaxCapacity >= 0, "diskMaxCapacity must be >= 0");
+            Preconditions.checkArgument(diskMaxBytes >= 0, "diskMaxBytes must be >= 0");
             Preconditions.checkArgument(numBackgroundThreads >= 0, "numBackgroundThreads must be >= 0");
             Preconditions.checkNotNull(path, "path must be non-null");
             Preconditions.checkNotNull(serializer, "serializer must be non-null");
@@ -232,7 +232,7 @@ public class DiskBackedQueue<E> implements Closeable {
             return new DiskBackedQueue<>(
                     new DiskBackedQueueInternals<>(pageSize, memMinCapacity / pageSize,
                                                    memMaxCapacity / pageSize,
-                                                   diskMaxCapacity / pageSize,
+                                                   diskMaxBytes,
                                                    numBackgroundThreads, path, serializer,
                                                    terminationWait, shutdownHook, silent, compress,
                                                    compressionLevel, compressionBuffer, memoryDouble));
@@ -350,6 +350,8 @@ public class DiskBackedQueue<E> implements Closeable {
     public int pageCount() {
         return queue.getPageCount();
     }
+
+    public long getDiskByteUsage() { return queue.getDiskByteUsage(); }
 
     public Path getPath() { return queue.getPath(); }
 

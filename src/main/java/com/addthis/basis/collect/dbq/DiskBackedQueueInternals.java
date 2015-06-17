@@ -46,6 +46,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 
 import com.addthis.basis.jvm.Shutdown;
+import com.addthis.basis.util.LessFiles;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -67,7 +68,7 @@ class DiskBackedQueueInternals<E> implements Closeable {
 
     private final int maxPages;
 
-    private final int maxDiskPages;
+    private final long maxDiskBytes;
 
     private final Serializer<E> serializer;
 
@@ -123,6 +124,11 @@ class DiskBackedQueueInternals<E> implements Closeable {
     private final AtomicInteger diskQueueSize;
 
     /**
+     * Estimate the current number of bytes stored on disk.
+     */
+    private final AtomicLong diskByteUsage = new AtomicLong();
+
+    /**
      * Pages pulled from the disk and waiting to
      * placed into the {@code readPage}.
      */
@@ -159,14 +165,14 @@ class DiskBackedQueueInternals<E> implements Closeable {
      * Use {@link DiskBackedQueue.Builder} to construct a disk-backed queue.
      * Throws an exception the external directory cannot be created or opened.
      */
-    DiskBackedQueueInternals(int pageSize, int minPages, int maxPages, int maxDiskPages,
+    DiskBackedQueueInternals(int pageSize, int minPages, int maxPages, long maxDiskBytes,
                              int numBackgroundThreads, Path path, Serializer<E> serializer,
                              Duration terminationWait, boolean shutdownHook, boolean silent,
                              boolean compress, int compressionLevel, int compressionBuffer,
                              boolean memoryDouble) throws IOException {
         this.pageSize = pageSize;
         this.maxPages = maxPages;
-        this.maxDiskPages = maxDiskPages;
+        this.maxDiskBytes = maxDiskBytes;
         this.external = path;
         this.serializer = serializer;
         this.terminationWait = terminationWait;
@@ -204,9 +210,10 @@ class DiskBackedQueueInternals<E> implements Closeable {
             NavigableMap<Long, Page<E>> readPages = readPagesFromExternal(readPageId, minReadPages);
             readPage = readPages.remove(readPageId);
             readQueue.putAll(readPages);
-            writePage = new Page<>(writePageId, pageSize, serializer, gzipOptions, external);
+            writePage = new Page<>(writePageId, pageSize, serializer, diskByteUsage, gzipOptions, external);
+            diskByteUsage.set(LessFiles.directorySize(external.toFile()));
         } else {
-            writePage = new Page<>(0, pageSize, serializer, gzipOptions, external);
+            writePage = new Page<>(0, pageSize, serializer, diskByteUsage, gzipOptions, external);
             readPage = writePage;
             pageCount.set(1);
         }
@@ -251,9 +258,10 @@ class DiskBackedQueueInternals<E> implements Closeable {
                 } finally {
                     inputStream.close();
                 }
+                diskByteUsage.addAndGet(-Files.size(file));
                 Files.delete(file);
             }
-            Page<E> page = new Page<>(i, pageSize, serializer, gzipOptions, external,
+            Page<E> page = new Page<>(i, pageSize, serializer, diskByteUsage, gzipOptions, external,
                                       new ByteArrayInputStream(copyStream.toByteArray()));
             results.put(i, page);
         }
@@ -434,7 +442,7 @@ class DiskBackedQueueInternals<E> implements Closeable {
                     testNotEmpty();
                     fastWrite.getAndIncrement();
                     return true;
-                } else if ((maxDiskPages > 0) && ((writePage.id - readPage.id) >= maxDiskPages)) {
+                } else if ((maxDiskBytes > 0) && (diskByteUsage.get() > maxDiskBytes)) {
                     if (unit == null) {
                         notFull.await();
                     } else if (nanos <= 0L) {
@@ -444,7 +452,7 @@ class DiskBackedQueueInternals<E> implements Closeable {
                     }
                 } else {
                     Page<E> oldPage = writePage;
-                    writePage = new Page<>(oldPage.id + 1, pageSize, serializer, gzipOptions, external);
+                    writePage = new Page<>(oldPage.id + 1, pageSize, serializer, diskByteUsage, gzipOptions, external);
                     writePage.add(e, memoryDouble ? bytearray : null);
                     pageCount.incrementAndGet();
                     if (readPage != oldPage) {
@@ -571,6 +579,8 @@ class DiskBackedQueueInternals<E> implements Closeable {
     public int getPageCount() {
         return pageCount.get();
     }
+
+    public long getDiskByteUsage() { return diskByteUsage.get(); }
 
     public Path getPath() { return external; }
 

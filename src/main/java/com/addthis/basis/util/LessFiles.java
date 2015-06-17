@@ -13,6 +13,8 @@
  */
 package com.addthis.basis.util;
 
+import javax.annotation.Nonnull;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,9 +24,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
+import java.io.UncheckedIOException;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public final class LessFiles {
 
@@ -238,5 +244,17 @@ public final class LessFiles {
         int suffix_pos = name.lastIndexOf('.');
         return new File(file.getParent(),
                 suffix_pos == -1 ? name + new_suffix : name.substring(0, suffix_pos) + new_suffix);
+    }
+
+    public static long directorySize(File directory) throws IOException {
+        long size = 0;
+        for (File file : directory.listFiles()) {
+            if (file.isFile()) {
+                size += file.length();
+            } else {
+                size += directorySize(directory);
+            }
+        }
+        return size;
     }
 }

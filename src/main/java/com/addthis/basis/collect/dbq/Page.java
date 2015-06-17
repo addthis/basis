@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -50,11 +52,16 @@ class Page<E> {
 
     final long id;
 
+    @Nonnull
     final ObjectByteArrayPair[] elements;
 
     final int pageSize;
 
+    @Nonnull
     final Serializer<E> serializer;
+
+    @Nonnull
+    final AtomicLong diskByteUsage;
 
     @Nonnull
     final GZIPOptions gzipOptions;
@@ -68,12 +75,13 @@ class Page<E> {
 
     int count;
 
-    Page(long id, int pageSize, Serializer<E> serializer, GZIPOptions gzipOptions,
+    Page(long id, int pageSize, Serializer<E> serializer, AtomicLong diskByteUsage, GZIPOptions gzipOptions,
          Path external, InputStream stream) throws IOException {
         try {
             this.id = id;
             this.pageSize = pageSize;
             this.serializer = serializer;
+            this.diskByteUsage = diskByteUsage;
             this.gzipOptions = gzipOptions;
             this.external = external;
             this.elements = new ObjectByteArrayPair[pageSize];
@@ -89,11 +97,12 @@ class Page<E> {
         }
     }
 
-    Page(long id, int pageSize, Serializer<E> serializer, GZIPOptions gzipOptions,
+    Page(long id, int pageSize, Serializer<E> serializer, AtomicLong diskByteUsage, GZIPOptions gzipOptions,
          Path external) {
         this.id = id;
         this.pageSize = pageSize;
         this.serializer = serializer;
+        this.diskByteUsage = diskByteUsage;
         this.gzipOptions = gzipOptions;
         this.external = external;
         this.elements = new ObjectByteArrayPair[pageSize];
@@ -158,10 +167,13 @@ class Page<E> {
             assert(!Files.exists(file));
             OutputStream outputStream = Files.newOutputStream(file);
             try {
-                outputStream.write(baos.toByteArray());
+                byte[] bytes = baos.toByteArray();
+                outputStream.write(bytes);
+                diskByteUsage.getAndAdd(bytes.length);
             } finally {
                 outputStream.close();
             }
+
         }
     }
 
