@@ -65,12 +65,12 @@ public class DiskBackedQueue<E> implements Closeable {
         private int numBackgroundThreads = -1;
         private int compressionLevel = 9;
         private int compressionBuffer = 1024;
+        private boolean memoryDouble = false;
         private Path path;
         private Serializer<E> serializer;
         private Duration terminationWait;
         private Boolean shutdownHook;
         private Boolean compress;
-        private Boolean memoryDouble;
 
         // optional
         private boolean silent;
@@ -179,6 +179,7 @@ public class DiskBackedQueue<E> implements Closeable {
          * disk-writing performance at the cost of additional memory overhead.
          * This parameter is required. Memory doubling is ignored
          * when {@link #put(Object, byte[])} is called with a null byte array.
+         * This parameter is optional. Default is false.
          */
         public Builder setMemoryDouble(boolean enable) {
             this.memoryDouble = enable;
@@ -226,7 +227,6 @@ public class DiskBackedQueue<E> implements Closeable {
             Preconditions.checkNotNull(terminationWait, "terminationWait must be specified");
             Preconditions.checkNotNull(shutdownHook, "shutdownHook usage must be specified");
             Preconditions.checkNotNull(compress, "compress usage must be specified");
-            Preconditions.checkNotNull(memoryDouble, "memory doubling usage must be specified");
             Preconditions.checkArgument(compressionLevel >= 0 && compressionLevel <= 9, "compression level must be between 0 and 9");
             Preconditions.checkArgument(compressionBuffer > 0, "compression buffer must greater than 0");
             return new DiskBackedQueue<>(
