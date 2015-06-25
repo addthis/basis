@@ -81,7 +81,7 @@ public class DiskBackedQueue<E> implements Closeable {
          * pages limit the concurrency of background writes. Suggested
          * values are in the range from 32 to 4096. This parameter is required.
          */
-        public Builder setPageSize(int size) {
+        public Builder<E> setPageSize(int size) {
             this.pageSize = size;
             return this;
         }
@@ -94,7 +94,7 @@ public class DiskBackedQueue<E> implements Closeable {
          * multiple of the page size. The value muse be greater than
          * or equal to page size. This parameter is required.
          */
-        public Builder setMemMinCapacity(int capacity) {
+        public Builder<E> setMemMinCapacity(int capacity) {
             this.memMinCapacity = capacity;
             return this;
         }
@@ -105,7 +105,7 @@ public class DiskBackedQueue<E> implements Closeable {
          * synchronously to write to disk. The value muse be greater than
          * or equal to memory minimum capacity. This parameter is required.
          */
-        public Builder setMemMaxCapacity(int capacity) {
+        public Builder<E> setMemMaxCapacity(int capacity) {
             this.memMaxCapacity = capacity;
             return this;
         }
@@ -114,7 +114,7 @@ public class DiskBackedQueue<E> implements Closeable {
          * Maximum number of bytes that are allowed to be stored
          * on disk. Set to 0 to specify no upper bound. This parameter is required.
          */
-        public Builder setDiskMaxBytes(long bytes) {
+        public Builder<E> setDiskMaxBytes(long bytes) {
             this.diskMaxBytes = bytes;
             return this;
         }
@@ -123,7 +123,7 @@ public class DiskBackedQueue<E> implements Closeable {
          * Number of background threads for asynchronous writes to disk.
          * If 0 then all writes are synchronous. This parameter is required.
          */
-        public Builder setNumBackgroundThreads(int threads) {
+        public Builder<E> setNumBackgroundThreads(int threads) {
             this.numBackgroundThreads = threads;
             return this;
         }
@@ -131,7 +131,7 @@ public class DiskBackedQueue<E> implements Closeable {
         /**
          * Path to the directory for storing external pages. This parameter is required.
          */
-        public Builder setPath(Path path) {
+        public Builder<E> setPath(Path path) {
             this.path = path;
             return this;
         }
@@ -149,7 +149,7 @@ public class DiskBackedQueue<E> implements Closeable {
          * Time interval to wait for any outstanding writes to be
          * flushed to disk when queue is closed. This parameter is required.
          */
-        public Builder setTerminationWait(Duration wait) {
+        public Builder<E> setTerminationWait(Duration wait) {
             this.terminationWait = wait;
             return this;
         }
@@ -159,7 +159,7 @@ public class DiskBackedQueue<E> implements Closeable {
          * close the disk backed queue on JVM shutdown.
          * This parameter is required.
          */
-        public Builder setShutdownHook(boolean hook) {
+        public Builder<E> setShutdownHook(boolean hook) {
             this.shutdownHook = hook;
             return this;
         }
@@ -168,7 +168,7 @@ public class DiskBackedQueue<E> implements Closeable {
          * If true then enable gzip compression of the external storage.
          * This parameter is required.
          */
-        public Builder setCompress(boolean compress) {
+        public Builder<E> setCompress(boolean compress) {
             this.compress = compress;
             return this;
         }
@@ -181,7 +181,7 @@ public class DiskBackedQueue<E> implements Closeable {
          * when {@link #put(Object, byte[])} is called with a null byte array.
          * This parameter is optional. Default is false.
          */
-        public Builder setMemoryDouble(boolean enable) {
+        public Builder<E> setMemoryDouble(boolean enable) {
             this.memoryDouble = enable;
             return this;
         }
@@ -190,7 +190,7 @@ public class DiskBackedQueue<E> implements Closeable {
          * If compression is enabled then this parameter sets the gzip
          * compression level. This parameter is optional. Default is 9.
          */
-        public Builder setCompressionLevel(int compressionLevel) {
+        public Builder<E> setCompressionLevel(int compressionLevel) {
             this.compressionLevel = compressionLevel;
             return this;
         }
@@ -199,7 +199,7 @@ public class DiskBackedQueue<E> implements Closeable {
          * If compression is enabled then this parameter sets the gzip
          * compression buffer size in bytes. This parameter is optional. Default is 1024.
          */
-        public Builder setCompressionBuffer(int compressionBuffer) {
+        public Builder<E> setCompressionBuffer(int compressionBuffer) {
             this.compressionBuffer = compressionBuffer;
             return this;
         }
@@ -209,7 +209,7 @@ public class DiskBackedQueue<E> implements Closeable {
          * Convenience method the same functionality can be
          * configured from the logger. This parameter is optional.
          */
-        public Builder setSilent(boolean silence) {
+        public Builder<E> setSilent(boolean silence) {
             this.silent = silence;
             return this;
         }
