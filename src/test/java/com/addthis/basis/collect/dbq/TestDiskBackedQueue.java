@@ -26,7 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 
-import com.addthis.basis.util.LessFiles;
+import com.addthis.basis.util.LessPaths;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -42,6 +42,8 @@ public class TestDiskBackedQueue {
 
     private static final Logger log = LoggerFactory.getLogger(TestDiskBackedQueue.class);
 
+    public static final SerializableSerializer<String> serializableSerializer = new SerializableSerializer<>();
+
     public static final Serializer<String> serializer = new Serializer<String>() {
 
         @Override public void toOutputStream(String input, OutputStream output) throws IOException {
@@ -53,7 +55,11 @@ public class TestDiskBackedQueue {
         @Override public String fromInputStream(InputStream input) throws IOException {
             int length = Page.readInt(input);
             byte[] data = new byte[length];
-            input.read(data);
+            int read = input.read(data);
+            if (read < length) {
+                throw new IOException("Expected " + length
+                                      + " bytes and received " + read + " + bytes");
+            }
             return new String(data);
         }
     };
@@ -81,7 +87,7 @@ public class TestDiskBackedQueue {
         assertNull(queue.poll());
         assertEquals(0, filecount(path));
         queue.close();
-        LessFiles.deleteDir(path.toFile());
+        LessPaths.recursiveDelete(path);
     }
 
     @Test
@@ -113,7 +119,7 @@ public class TestDiskBackedQueue {
         assertNull(queue.poll());
         assertEquals(0, filecount(path));
         queue.close();
-        LessFiles.deleteDir(path.toFile());
+        LessPaths.recursiveDelete(path);
     }
 
     @Test
@@ -147,7 +153,7 @@ public class TestDiskBackedQueue {
         assertEquals("quux", queue.poll());
         assertNull(queue.poll());
         queue.close();
-        LessFiles.deleteDir(path.toFile());
+        LessPaths.recursiveDelete(path);
     }
 
     @Test
@@ -182,7 +188,7 @@ public class TestDiskBackedQueue {
         assertNull(queue.poll());
         assertTrue(queue.offer("gggggggggggg", null));
         queue.close();
-        LessFiles.deleteDir(path.toFile());
+        LessPaths.recursiveDelete(path);
     }
 
     @Test
@@ -204,15 +210,49 @@ public class TestDiskBackedQueue {
         assertTrue(queue.getDiskByteUsage() == 0);
         queue.put("hello", null);
         queue.put("world", null);
+        assertEquals(2, queue.size());
         queue.close();
         assertTrue(filecount(path) > 0);
         assertTrue(queue.getDiskByteUsage() > 0);
         queue = builder.build();
+        assertEquals(2, queue.size());
         assertEquals("hello", queue.poll());
         assertEquals("world", queue.poll());
         assertNull(queue.poll());
         queue.close();
-        LessFiles.deleteDir(path.toFile());
+        LessPaths.recursiveDelete(path);
+    }
+
+    @Test
+    public void serializableSerializer() throws Exception {
+        Path path = Files.createTempDirectory("dbq-test");
+        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+        builder.setPageSize(1024);
+        builder.setMemMinCapacity(1024);
+        builder.setMemMaxCapacity(1024);
+        builder.setDiskMaxBytes(0);
+        builder.setSerializer(serializableSerializer);
+        builder.setPath(path);
+        builder.setNumBackgroundThreads(0);
+        builder.setShutdownHook(false);
+        builder.setCompress(true);
+        builder.setMemoryDouble(false);
+        builder.setTerminationWait(Duration.ofMinutes(2));
+        DiskBackedQueue<String> queue = builder.build();
+        assertTrue(queue.getDiskByteUsage() == 0);
+        queue.put("hello", null);
+        queue.put("world", null);
+        assertEquals(2, queue.size());
+        queue.close();
+        assertTrue(filecount(path) > 0);
+        assertTrue(queue.getDiskByteUsage() > 0);
+        queue = builder.build();
+        assertEquals(2, queue.size());
+        assertEquals("hello", queue.poll());
+        assertEquals("world", queue.poll());
+        assertNull(queue.poll());
+        queue.close();
+        LessPaths.recursiveDelete(path);
     }
 
     private static int filecount(Path path) {
@@ -220,11 +260,16 @@ public class TestDiskBackedQueue {
     }
 
     @Test
+    public void sharedExecutor() throws Exception {
+        concurrentReadsWrites(4, 4, 4, 100_000, true);
+    }
+
+    @Test
     public void concurrentReadsWrites() throws Exception {
         for (int i = 1; i <= 4; i++) {
             for (int j = 1; j <= 4; j++) {
                 for (int k = 0; k <= 4; k++) {
-                    concurrentReadsWrites(i, j, k, 100_000);
+                    concurrentReadsWrites(i, j, k, 100_000, false);
                 }
             }
         }
@@ -232,7 +277,8 @@ public class TestDiskBackedQueue {
 
     private void concurrentReadsWrites(int numReaders, int numWriters,
                                        int numBackgroundThreads,
-                                       int elements) throws Exception {
+                                       int elements,
+                                       boolean sharedSheduler) throws Exception {
         log.info("Testing disk backed queue with {} readers, " +
                  "{} writers, and {} background threads",
                  numReaders, numWriters, numBackgroundThreads);
@@ -249,6 +295,7 @@ public class TestDiskBackedQueue {
         builder.setCompress(true);
         builder.setMemoryDouble(false);
         builder.setTerminationWait(Duration.ofMinutes(2));
+        builder.setSharedScheduler(sharedSheduler);
         DiskBackedQueue<String> queue = builder.build();
         Thread[] readers = new Thread[numReaders];
         Thread[] writers = new Thread[numWriters];
@@ -272,7 +319,7 @@ public class TestDiskBackedQueue {
         }
         assertEquals(elements, values.size());
         queue.close();
-        LessFiles.deleteDir(path.toFile());
+        LessPaths.recursiveDelete(path);
     }
 
     private static class WriterTask implements Runnable {
@@ -337,14 +384,19 @@ public class TestDiskBackedQueue {
             this.finishedWriters = finishedWriters;
         }
 
+
+
         @Override public void run() {
+            boolean exit = false;
             try {
                 while (true) {
                     String next = queue.poll();
                     if (next != null) {
                         values.put(next, next);
-                    } else if (finishedWriters.get()) {
+                    } else if (exit && (queue.diskQueueSize() == 0) && (queue.backgroundActiveTasks() == 0)) {
                         return;
+                    } else if (finishedWriters.get()) {
+                        exit = true;
                     }
                 }
             } catch (Exception ex) {

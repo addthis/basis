@@ -18,20 +18,26 @@ import javax.annotation.Nullable;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 
+import java.util.AbstractQueue;
+import java.util.Iterator;
+import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
 import java.nio.file.Path;
 import java.time.Duration;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.primitives.Ints;
 
 /**
  * Thread-safe FIFO queue that writes overflow elements to disk. If memory capacity is not exceeded
  * then all operations occur in memory. {@link #put( Object , byte[])}
  * requests are designed to return quickly and write to disk
  * asynchronously if one or more background threads have been configured.
- * All requests of the {@link DiskBackedQueueInternals#get(long, TimeUnit)}
+ * All requests of the {@link DiskBackedQueueInternals#get(boolean, long, TimeUnit)}
  * family perform synchronous reads from the disk. A {@link #close()}
  * will write the contents of the queue to the external storage.
  *
@@ -49,7 +55,7 @@ import com.google.common.base.Preconditions;
  * Refer to {@link DiskBackedQueueInternals} for the
  * the implementation.
  */
-public class DiskBackedQueue<E> implements Closeable {
+public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, Queue<E> {
 
     private final DiskBackedQueueInternals<E> queue;
 
@@ -66,6 +72,7 @@ public class DiskBackedQueue<E> implements Closeable {
         private int compressionLevel = 9;
         private int compressionBuffer = 1024;
         private boolean memoryDouble = false;
+        private boolean sharedScheduler = false;
         private Path path;
         private Serializer<E> serializer;
         private Duration terminationWait;
@@ -140,7 +147,7 @@ public class DiskBackedQueue<E> implements Closeable {
          * Serializer for reading/writing elements to/from disk.
          * This parameter is required.
          */
-        public Builder setSerializer(Serializer<E> serializer) {
+        public Builder<E> setSerializer(Serializer<E> serializer) {
             this.serializer = serializer;
             return this;
         }
@@ -205,6 +212,17 @@ public class DiskBackedQueue<E> implements Closeable {
         }
 
         /**
+         * If enabled then this instance will use the shared scheduler for
+         * background threads. This parameter is optional. Default is false.
+         * The number of threads in the shared scheduler will be set to the
+         * maximum of the previous value and the number specified in this builder.
+         */
+        public Builder<E> setSharedScheduler(boolean enable) {
+            this.sharedScheduler = enable;
+            return this;
+        }
+
+        /**
          * If true then do not print informational log messages.
          * Convenience method the same functionality can be
          * configured from the logger. This parameter is optional.
@@ -235,8 +253,18 @@ public class DiskBackedQueue<E> implements Closeable {
                                                    diskMaxBytes,
                                                    numBackgroundThreads, path, serializer,
                                                    terminationWait, shutdownHook, silent, compress,
-                                                   compressionLevel, compressionBuffer, memoryDouble));
+                                                   compressionLevel, compressionBuffer, memoryDouble,
+                                                   sharedScheduler));
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @throws UncheckedIOException if error reading from or writing to the backing store
+     */
+    @Override
+    public boolean offer(E e) {
+        return offer(e, null);
     }
 
     /**
@@ -244,14 +272,33 @@ public class DiskBackedQueue<E> implements Closeable {
      * or returns {@code null} if this queue is empty.
      *
      * @return the head of this queue, or {@code null} if this queue is empty
-     * @throws IOException if error reading the backing store
+     * @throws UncheckedIOException if error reading from or writing to the backing store
      */
-    public E poll() throws IOException {
+    @Override
+    public E poll() throws UncheckedIOException {
         try {
-            return queue.get(0, TimeUnit.MILLISECONDS);
+            return queue.get(true, 0, TimeUnit.MILLISECONDS);
         } catch (InterruptedException ex) {
             // This should never happen. The call was nonblocking.
             throw new IllegalStateException(ex);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @throws UncheckedIOException if error reading from or writing to the backing store
+     */
+    @Override
+    public E peek() {
+        try {
+            return queue.get(false, 0, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ex) {
+            // This should never happen. The call was nonblocking.
+            throw new IllegalStateException(ex);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
         }
     }
 
@@ -266,11 +313,15 @@ public class DiskBackedQueue<E> implements Closeable {
      * @return the head of this queue, or {@code null} if the
      *         specified waiting time elapses before an element is available
      * @throws InterruptedException if interrupted while waiting
-     * @throws IOException if error reading the backing store
+     * @throws UncheckedIOException if error reading from or writing to the backing store
      */
-    public E poll(long timeout, TimeUnit unit) throws IOException, InterruptedException {
+    public E poll(long timeout, TimeUnit unit) throws UncheckedIOException, InterruptedException {
         Preconditions.checkNotNull(unit);
-        return queue.get(timeout, unit);
+        try {
+            return queue.get(true, timeout, unit);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
     }
 
     /**
@@ -279,10 +330,14 @@ public class DiskBackedQueue<E> implements Closeable {
      *
      * @return the head of this queue
      * @throws InterruptedException if interrupted while waiting
-     * @throws IOException if error reading the backing store
+     * @throws UncheckedIOException if error reading from or writing to the backing store
      */
-    public E take() throws IOException, InterruptedException {
-        return queue.get(0, null);
+    public E take() throws UncheckedIOException, InterruptedException {
+        try {
+            return queue.get(true, 0, null);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
     }
 
     /**
@@ -296,10 +351,14 @@ public class DiskBackedQueue<E> implements Closeable {
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this queue
      * @throws InterruptedException if interrupted while waiting
-     * @throws IOException if error reading the backing store
+     * @throws UncheckedIOException if error reading from or writing to the backing store
      */
-    public void put(@Nonnull E e, @Nullable byte[] data) throws IOException, InterruptedException {
-        queue.offer(e, data, 0, null);
+    public void put(@Nonnull E e, @Nullable byte[] data) throws UncheckedIOException, InterruptedException {
+        try {
+            queue.offer(e, data, 0, null);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
     }
 
     /**
@@ -312,14 +371,16 @@ public class DiskBackedQueue<E> implements Closeable {
      * @throws NullPointerException if the specified element is null
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this queue
-     * @throws IOException if error reading the backing store
+     * @throws UncheckedIOException if error reading from or writing to the backing store
      */
-    public boolean offer(@Nonnull E e, @Nullable byte[] data) throws IOException {
+    public boolean offer(@Nonnull E e, @Nullable byte[] data) throws UncheckedIOException {
         try {
             return queue.offer(e, data, 0, TimeUnit.MILLISECONDS);
         } catch (InterruptedException ex) {
             // This should never happen. The call was nonblocking.
             throw new IllegalStateException(ex);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
         }
     }
 
@@ -334,21 +395,16 @@ public class DiskBackedQueue<E> implements Closeable {
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this queue
      * @throws InterruptedException if interrupted while waiting
-     * @throws IOException if error reading the backing store
+     * @throws UncheckedIOException if error reading from or writing to the backing store
      */
-    public boolean offer(@Nonnull E e, @Nullable byte[] data, long timeout, TimeUnit unit) throws IOException,
+    public boolean offer(@Nonnull E e, @Nullable byte[] data, long timeout, TimeUnit unit) throws UncheckedIOException,
                                                                                                   InterruptedException {
         Preconditions.checkNotNull(unit);
-        return queue.offer(e, data, timeout, unit);
-    }
-
-    /**
-     * Sum of number of pages in memory and number of pages on disk.
-     *
-     * @return current number of pages.
-     */
-    public int pageCount() {
-        return queue.getPageCount();
+        try {
+            return queue.offer(e, data, timeout, unit);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
     }
 
     public long getDiskByteUsage() { return queue.getDiskByteUsage(); }
@@ -360,9 +416,44 @@ public class DiskBackedQueue<E> implements Closeable {
         queue.close();
     }
 
+    /**
+     * {@inheritDoc}
+     * @throws UncheckedIOException if error reading from or writing to the backing store
+     */
+    @Override
+    public void clear() {
+        try {
+            queue.clear();
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
     public double fastToSlowWriteRatio() {
         long fastWrite = queue.getFastWrite();
         long slowWrite = queue.getSlowWrite();
         return ((double) fastWrite) / (slowWrite);
+    }
+
+    @Override public Iterator<E> iterator() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override public int size() {
+        return Ints.saturatedCast(queue.size());
+    }
+
+    @VisibleForTesting
+    int diskQueueSize() {
+        if (queue.diskQueueSize == null) {
+            return 0;
+        } else {
+            return queue.diskQueueSize.get();
+        }
+    }
+
+    @VisibleForTesting
+    int backgroundActiveTasks() {
+        return queue.backgroundActiveTasks.get();
     }
 }

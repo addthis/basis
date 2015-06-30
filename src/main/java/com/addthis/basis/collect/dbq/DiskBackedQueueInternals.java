@@ -14,6 +14,7 @@
 package com.addthis.basis.collect.dbq;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
 import java.io.ByteArrayInputStream;
@@ -22,6 +23,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
@@ -30,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +51,7 @@ import java.time.Duration;
 
 import com.addthis.basis.jvm.Shutdown;
 import com.addthis.basis.util.LessFiles;
+import com.addthis.basis.util.LessPaths;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -60,26 +65,26 @@ class DiskBackedQueueInternals<E> implements Closeable {
 
     private static final Logger log = LoggerFactory.getLogger(DiskBackedQueue.class);
 
-    private final int pageSize;
+    final int pageSize;
 
-    private final int minReadPages;
+    final int minReadPages;
 
-    private final int minWritePages;
+    final int minWritePages;
 
-    private final int maxPages;
+    final int maxPages;
 
-    private final long maxDiskBytes;
+    final long maxDiskBytes;
 
-    private final Serializer<E> serializer;
+    final Serializer<E> serializer;
 
-    private final Duration terminationWait;
+    final Duration terminationWait;
 
     @Nonnull
-    private final GZIPOptions gzipOptions;
+    final GZIPOptions gzipOptions;
 
-    private final boolean silent;
+    final boolean silent;
 
-    private final boolean memoryDouble;
+    final boolean memoryDouble;
 
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -90,7 +95,7 @@ class DiskBackedQueueInternals<E> implements Closeable {
      * of the external files.
      */
     @GuardedBy("external")
-    private final Path external;
+    final Path external;
 
     /**
      * Defined as {@code lock.newCondition()}.
@@ -116,17 +121,24 @@ class DiskBackedQueueInternals<E> implements Closeable {
      * in the disk queue must not referenced by the
      * {@code writePage} or the {@code readPage}.
      */
+    @Nullable
     private final ConcurrentSkipListMap<Long, Page<E>> diskQueue;
 
     /**
      * Estimate the current size of the diskQueue.
      */
-    private final AtomicInteger diskQueueSize;
+    @Nullable
+    final AtomicInteger diskQueueSize;
 
     /**
      * Estimate the current number of bytes stored on disk.
      */
-    private final AtomicLong diskByteUsage = new AtomicLong();
+    final AtomicLong diskByteUsage = new AtomicLong();
+
+    /**
+     * The number of items in the queue.
+     */
+    final AtomicLong queueSize = new AtomicLong();
 
     /**
      * Pages pulled from the disk and waiting to
@@ -143,13 +155,18 @@ class DiskBackedQueueInternals<E> implements Closeable {
 
     private final AtomicReference<IOException> error = new AtomicReference<>(null);
 
-    private final ScheduledExecutorService backgroundTasks;
+    private final ScheduledThreadPoolExecutor executor;
+
+    private static final ScheduledThreadPoolExecutor sharedExecutor = new ScheduledThreadPoolExecutor(
+            0, new ThreadFactoryBuilder().setNameFormat("disk-backed-queue-shared-writer-%d").build());
+
+    private final List<ScheduledFuture<?>> backgroundTasks;
+
+    final AtomicInteger backgroundActiveTasks = new AtomicInteger();
 
     private final CompletableFuture<Void> closeFuture = new CompletableFuture<>();
 
     private final AtomicBoolean closed = new AtomicBoolean();
-
-    private final AtomicInteger pageCount = new AtomicInteger();
 
     private final AtomicLong fastWrite = new AtomicLong();
 
@@ -169,7 +186,7 @@ class DiskBackedQueueInternals<E> implements Closeable {
                              int numBackgroundThreads, Path path, Serializer<E> serializer,
                              Duration terminationWait, boolean shutdownHook, boolean silent,
                              boolean compress, int compressionLevel, int compressionBuffer,
-                             boolean memoryDouble) throws IOException {
+                             boolean memoryDouble, boolean sharedScheduler) throws IOException {
         this.pageSize = pageSize;
         this.maxPages = maxPages;
         this.maxDiskBytes = maxDiskBytes;
@@ -182,22 +199,31 @@ class DiskBackedQueueInternals<E> implements Closeable {
         if (maxPages <= 1) {
             this.diskQueue = null;
             this.diskQueueSize = null;
+            this.executor = null;
             this.backgroundTasks = null;
             this.minReadPages = minPages;
             this.minWritePages = 0;
         } else {
             this.diskQueue = new ConcurrentSkipListMap<>();
             this.diskQueueSize = new AtomicInteger();
-            this.backgroundTasks = new ScheduledThreadPoolExecutor(
-                    numBackgroundThreads,
-                    new ThreadFactoryBuilder().setNameFormat("disk-backed-queue-writer-%d").build());
+            if (sharedScheduler) {
+                this.executor = null;
+                sharedExecutor.setCorePoolSize(Math.max(numBackgroundThreads, sharedExecutor.getCorePoolSize()));
+            } else {
+                this.executor = new ScheduledThreadPoolExecutor(
+                        numBackgroundThreads,
+                        new ThreadFactoryBuilder().setNameFormat("disk-backed-queue-writer-%d").build());
+            }
             this.minReadPages = Math.max(minPages / 2, 1); // always fetch at least one page
             this.minWritePages = minPages / 2;
+            this.backgroundTasks = new ArrayList<>(numBackgroundThreads);
             for (int i = 0; i < numBackgroundThreads; i++) {
-                backgroundTasks.scheduleWithFixedDelay(new DiskWriteTask(),
-                                                       0, 10, TimeUnit.MILLISECONDS);
+                ScheduledExecutorService service = sharedScheduler ? sharedExecutor : executor;
+                backgroundTasks.add(service.scheduleWithFixedDelay(new DiskWriteTask(),
+                                                                    0, 10, TimeUnit.MILLISECONDS));
             }
         }
+        Files.createDirectories(external);
         Optional<Path> minFile = Files.list(external).min(
                 (f1, f2) -> (f1.getFileName().toString().compareTo(f2.getFileName().toString())));
         Optional<Path> maxFile = Files.list(external).max(
@@ -206,16 +232,16 @@ class DiskBackedQueueInternals<E> implements Closeable {
             long readPageId, writePageId;
             readPageId  = Long.parseLong(minFile.get().getFileName().toString());
             writePageId = Long.parseLong(maxFile.get().getFileName().toString()) + 1;
-            pageCount.set((int) (writePageId - readPageId + 1));
             NavigableMap<Long, Page<E>> readPages = readPagesFromExternal(readPageId, minReadPages);
             readPage = readPages.remove(readPageId);
             readQueue.putAll(readPages);
-            writePage = new Page<>(writePageId, pageSize, serializer, diskByteUsage, gzipOptions, external);
+            writePage = new Page<>(this, writePageId);
             diskByteUsage.set(LessFiles.directorySize(external.toFile()));
+            long size = Long.parseLong(new String(Files.readAllBytes(external.resolve("size"))));
+            queueSize.set(size);
         } else {
-            writePage = new Page<>(0, pageSize, serializer, diskByteUsage, gzipOptions, external);
+            writePage = new Page<>(this, 0);
             readPage = writePage;
-            pageCount.set(1);
         }
         if (shutdownHook) {
             Shutdown.tryAddShutdownHook(new Thread(this::close, "disk-backed-queue-shutdown"));
@@ -261,8 +287,7 @@ class DiskBackedQueueInternals<E> implements Closeable {
                 diskByteUsage.addAndGet(-Files.size(file));
                 Files.delete(file);
             }
-            Page<E> page = new Page<>(i, pageSize, serializer, diskByteUsage, gzipOptions, external,
-                                      new ByteArrayInputStream(copyStream.toByteArray()));
+            Page<E> page = new Page<>(this, i, new ByteArrayInputStream(copyStream.toByteArray()));
             results.put(i, page);
         }
         return results;
@@ -302,7 +327,6 @@ class DiskBackedQueueInternals<E> implements Closeable {
         }
         if ((nextId == writePage.id) && (readPage != writePage)) {
             readPage = writePage;
-            pageCount.set(1);
             notFull.signalAll();
             return !readPage.empty();
         }
@@ -340,7 +364,6 @@ class DiskBackedQueueInternals<E> implements Closeable {
                 diskQueueSize.decrementAndGet();
             }
             readPage = nextPage;
-            pageCount.decrementAndGet();
             notEmpty.signalAll();
             notFull.signalAll();
             return true;
@@ -355,10 +378,11 @@ class DiskBackedQueueInternals<E> implements Closeable {
      * To return immediately with no waiting call with {@code unit} as
      * non-null and {@code timeout} as 0.
      *
+     * @param remove  If true then remove the element from the queue
      * @param timeout amount of time to wait. Ignored if {@code unit} is null.
      * @param unit    If non-null then maximum time to wait for an element.
      */
-    E get(long timeout, TimeUnit unit) throws InterruptedException, IOException {
+    E get(boolean remove, long timeout, TimeUnit unit) throws InterruptedException, IOException {
         if (closed.get()) {
             throw new IllegalStateException("attempted read after close()");
         }
@@ -377,15 +401,14 @@ class DiskBackedQueueInternals<E> implements Closeable {
                 }
                 long nextId = readPage.id + 1;
                 if (!readPage.empty()) {
-                    return readPage.remove();
+                    return readPage.get(remove);
                 } else if (fetchFromQueues(nextId)) {
-                    return readPage.remove();
+                    return readPage.get(remove);
                 } else if ((nextId == writePage.id) && (readPage != writePage)) {
                     readPage = writePage;
-                    pageCount.set(1);
                     notFull.signalAll();
                 } else if ((nextId < writePage.id) && loadPageFromFile(nextId)) {
-                    return readPage.remove();
+                    return readPage.get(remove);
                 } else if (unit == null) {
                     notEmpty.await();
                 } else if (nanos <= 0L) {
@@ -452,9 +475,8 @@ class DiskBackedQueueInternals<E> implements Closeable {
                     }
                 } else {
                     Page<E> oldPage = writePage;
-                    writePage = new Page<>(oldPage.id + 1, pageSize, serializer, diskByteUsage, gzipOptions, external);
+                    writePage = new Page<>(this, oldPage.id + 1);
                     writePage.add(e, memoryDouble ? bytearray : null);
-                    pageCount.incrementAndGet();
                     if (readPage != oldPage) {
                         if ((diskQueue == null) || (diskQueueSize.get() > maxPages)) {
                             foregroundWrite(oldPage);
@@ -501,24 +523,50 @@ class DiskBackedQueueInternals<E> implements Closeable {
         }
     }
 
+    public void clear() throws IOException {
+        lock.lock();
+        try {
+            writePage = new Page<>(this, 0);
+            readPage = writePage;
+            queueSize.set(0);
+            if (diskQueue != null) {
+                diskQueue.clear();
+            }
+            if (diskQueueSize != null) {
+                diskQueueSize.set(0);
+            }
+            synchronized (external) {
+                LessPaths.recursiveDelete(external);
+                Files.createDirectories(external);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
     @Override public void close() {
         if (!closed.getAndSet(true)) {
             long startTime = System.currentTimeMillis();
             long endTime = startTime + terminationWait.toMillis();
             try {
                 if (backgroundTasks != null) {
-                    backgroundTasks.shutdown();
+                    for (ScheduledFuture<?> future : backgroundTasks) {
+                        future.cancel(true);
+                    }
+                }
+                if (executor != null) {
+                    executor.shutdown();
                     try {
                         if (!silent) {
                             log.info("Waiting on background threads to write approximately {} pages",
                                      diskQueueSize.get());
                         }
-                        backgroundTasks.awaitTermination(terminationWait.toMillis(), TimeUnit.MILLISECONDS);
+                        executor.awaitTermination(terminationWait.toMillis(), TimeUnit.MILLISECONDS);
                     } catch (InterruptedException ex) {
                         closeFuture.completeExceptionally(ex);
                         Throwables.propagate(ex);
                     } finally {
-                        backgroundTasks.shutdownNow();
+                        executor.shutdownNow();
                     }
                 }
                 int unwritten = calculateDirtyPageCount();
@@ -551,11 +599,14 @@ class DiskBackedQueueInternals<E> implements Closeable {
                         lock.unlock();
                     }
                 }
+                long writeSize = queueSize.get();
                 unwritten = calculateDirtyPageCount();
                 if (unwritten > 0) {
                     log.warn("Closing of disk-backed queue timed out before writing all pages to disk. " +
                          "Approximately {} pages were not written to disk.", unwritten);
+                    writeSize -= unwritten * pageSize;
                 }
+                Files.write(external.resolve("size"), Long.toString(writeSize).getBytes());
                 IOException previous = error.get();
                 if (previous != null) {
                     closeFuture.completeExceptionally(previous);
@@ -576,11 +627,9 @@ class DiskBackedQueueInternals<E> implements Closeable {
         }
     }
 
-    public int getPageCount() {
-        return pageCount.get();
-    }
-
     public long getDiskByteUsage() { return diskByteUsage.get(); }
+
+    public long size() { return queueSize.get(); }
 
     public Path getPath() { return external; }
 
@@ -604,9 +653,10 @@ class DiskBackedQueueInternals<E> implements Closeable {
 
         @Override
         public void run() {
-            while ((getError() == null) && (diskQueueSize.get() > minWritePages)) {
-                try {
-                    Map.Entry<Long,Page<E>> minEntry = diskQueue.pollFirstEntry();
+            backgroundActiveTasks.getAndIncrement();
+            try {
+                while ((getError() == null) && (diskQueueSize.get() > minWritePages)) {
+                    Map.Entry<Long, Page<E>> minEntry = diskQueue.pollFirstEntry();
                     if (minEntry != null) {
                         diskQueueSize.decrementAndGet();
                         minEntry.getValue().writeToFile();
@@ -617,9 +667,11 @@ class DiskBackedQueueInternals<E> implements Closeable {
                     if (Thread.interrupted()) {
                         break;
                     }
-                } catch (IOException ex) {
-                    setError(ex);
                 }
+            } catch (IOException ex) {
+                setError(ex);
+            } finally {
+                backgroundActiveTasks.getAndDecrement();
             }
         }
     }

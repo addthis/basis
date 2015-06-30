@@ -64,6 +64,9 @@ class Page<E> {
     final AtomicLong diskByteUsage;
 
     @Nonnull
+    final AtomicLong queueSize;
+
+    @Nonnull
     final GZIPOptions gzipOptions;
 
     @GuardedBy("external")
@@ -75,15 +78,15 @@ class Page<E> {
 
     int count;
 
-    Page(long id, int pageSize, Serializer<E> serializer, AtomicLong diskByteUsage, GZIPOptions gzipOptions,
-         Path external, InputStream stream) throws IOException {
+    Page(DiskBackedQueueInternals<E> queue, long id, InputStream stream) throws IOException {
         try {
             this.id = id;
-            this.pageSize = pageSize;
-            this.serializer = serializer;
-            this.diskByteUsage = diskByteUsage;
-            this.gzipOptions = gzipOptions;
-            this.external = external;
+            this.pageSize = queue.pageSize;
+            this.serializer = queue.serializer;
+            this.diskByteUsage = queue.diskByteUsage;
+            this.queueSize = queue.queueSize;
+            this.gzipOptions = queue.gzipOptions;
+            this.external = queue.external;
             this.elements = new ObjectByteArrayPair[pageSize];
             this.count = readInt(stream);
             for (int i = 0; i < count; i++) {
@@ -97,14 +100,14 @@ class Page<E> {
         }
     }
 
-    Page(long id, int pageSize, Serializer<E> serializer, AtomicLong diskByteUsage, GZIPOptions gzipOptions,
-         Path external) {
+    Page(DiskBackedQueueInternals<E> queue, long id) {
         this.id = id;
-        this.pageSize = pageSize;
-        this.serializer = serializer;
-        this.diskByteUsage = diskByteUsage;
-        this.gzipOptions = gzipOptions;
-        this.external = external;
+        this.pageSize = queue.pageSize;
+        this.serializer = queue.serializer;
+        this.diskByteUsage = queue.diskByteUsage;
+        this.queueSize = queue.queueSize;
+        this.gzipOptions = queue.gzipOptions;
+        this.external = queue.external;
         this.elements = new ObjectByteArrayPair[pageSize];
         this.count = 0;
         this.readerIndex = 0;
@@ -124,6 +127,7 @@ class Page<E> {
         elements[writerIndex] = new ObjectByteArrayPair<>(e, bytearray);
         writerIndex = (writerIndex + 1) % pageSize;
         count++;
+        queueSize.getAndIncrement();
     }
 
     void clear() {
@@ -132,11 +136,14 @@ class Page<E> {
         writerIndex = 0;
     }
 
-    E remove() {
+    E get(boolean remove) {
         assert(!empty());
         ObjectByteArrayPair<E> result = elements[readerIndex];
-        readerIndex = (readerIndex + 1) % pageSize;
-        count--;
+        if (remove) {
+            readerIndex = (readerIndex + 1) % pageSize;
+            count--;
+            queueSize.getAndDecrement();
+        }
         return result.value;
     }
 
