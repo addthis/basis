@@ -30,7 +30,7 @@
   <parent>
     <artifactId>jar-pom</artifactId>
     <groupId>com.addthis.common.build.maven.pom</groupId>
-    <version>3.1.0</version>
+    <version>3.4.1</version>
     <!--setting the relativePath to nothing quiets a spurious warning when put in a subdirectory-->
     <relativePath/>
   </parent>
@@ -50,13 +50,13 @@
     <dependency>
       <groupId>org.openjdk.jmh</groupId>
       <artifactId>jmh-core</artifactId>
-      <version>0.9</version>
+      <version>1.10.1</version>
     </dependency>
     <!--additional, required jmh dependency-->
     <dependency>
       <groupId>org.openjdk.jmh</groupId>
       <artifactId>jmh-generator-annprocess</artifactId>
-      <version>0.9</version>
+      <version>1.10.1</version>
       <scope>provided</scope>
     </dependency>
     <!--java object layout; good for checking in-memory representations and efficiency-->
