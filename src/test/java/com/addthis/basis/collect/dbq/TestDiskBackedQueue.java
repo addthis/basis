@@ -192,6 +192,32 @@ public class TestDiskBackedQueue {
     }
 
     @Test
+    public void closeAndReopenEmpty() throws Exception {
+        Path path = Files.createTempDirectory("dbq-test");
+        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+        builder.setPageSize(1024);
+        builder.setMemMinCapacity(1024);
+        builder.setMemMaxCapacity(1024);
+        builder.setDiskMaxBytes(0);
+        builder.setSerializer(serializer);
+        builder.setPath(path);
+        builder.setNumBackgroundThreads(0);
+        builder.setShutdownHook(false);
+        builder.setCompress(true);
+        builder.setMemoryDouble(false);
+        builder.setTerminationWait(Duration.ofMinutes(2));
+        DiskBackedQueue<String> queue = builder.build();
+        assertTrue(queue.getDiskByteUsage() == 0);
+        queue.close();
+        assertEquals(1, filecount(path));
+        assertEquals(0, queue.getDiskByteUsage());
+        queue = builder.build();
+        assertNull(queue.poll());
+        queue.close();
+        LessPaths.recursiveDelete(path);
+    }
+
+    @Test
     public void closeAndReopen() throws Exception {
         Path path = Files.createTempDirectory("dbq-test");
         DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();

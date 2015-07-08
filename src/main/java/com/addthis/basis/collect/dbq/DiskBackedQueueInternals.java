@@ -43,10 +43,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 
 import com.addthis.basis.jvm.Shutdown;
@@ -178,6 +180,10 @@ class DiskBackedQueueInternals<E> implements Closeable {
      */
     private final Semaphore loadPageSemaphore = new Semaphore(1);
 
+    private static final Path SIZEFILE = Paths.get("size");
+
+    private static final Predicate<Path> EXCLUDE_SIZEFILE = filepath -> !filepath.getFileName().equals(SIZEFILE);
+
     /**
      * Use {@link DiskBackedQueue.Builder} to construct a disk-backed queue.
      * Throws an exception the external directory cannot be created or opened.
@@ -224,9 +230,9 @@ class DiskBackedQueueInternals<E> implements Closeable {
             }
         }
         Files.createDirectories(external);
-        Optional<Path> minFile = Files.list(external).min(
+        Optional<Path> minFile = Files.list(external).filter(EXCLUDE_SIZEFILE).min(
                 (f1, f2) -> (f1.getFileName().toString().compareTo(f2.getFileName().toString())));
-        Optional<Path> maxFile = Files.list(external).max(
+        Optional<Path> maxFile = Files.list(external).filter(EXCLUDE_SIZEFILE).max(
                 (f1, f2) -> (f2.getFileName().toString().compareTo(f1.getFileName().toString())));
         if (minFile.isPresent() && maxFile.isPresent()) {
             long readPageId, writePageId;
