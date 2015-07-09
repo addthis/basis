@@ -534,6 +534,8 @@ class DiskBackedQueueInternals<E> implements Closeable {
                             diskQueueSize.incrementAndGet();
                             fastWrite.getAndIncrement();
                         }
+                    } else {
+                        fastWrite.getAndIncrement();
                     }
                     testNotEmpty();
                     return true;
