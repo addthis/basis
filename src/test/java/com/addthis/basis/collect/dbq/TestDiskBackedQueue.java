@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,6 +29,8 @@ import java.nio.file.Path;
 import java.time.Duration;
 
 import com.addthis.basis.util.LessPaths;
+
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -43,6 +47,8 @@ public class TestDiskBackedQueue {
     private static final Logger log = LoggerFactory.getLogger(TestDiskBackedQueue.class);
 
     public static final SerializableSerializer<String> serializableSerializer = new SerializableSerializer<>();
+
+    private static ImmutableList<String> ELEMENTS = ImmutableList.of("hello", "world", "foo", "bar", "baz", "quux");
 
     public static final Serializer<String> serializer = new Serializer<String>() {
 
@@ -154,6 +160,45 @@ public class TestDiskBackedQueue {
         assertNull(queue.poll());
         queue.close();
         LessPaths.recursiveDelete(path);
+    }
+
+    private void drainToWithMaxElements(int maxElements) throws Exception {
+        Path path = Files.createTempDirectory("dbq-test");
+        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+        List<String> drain = new ArrayList<>();
+        builder.setPageSize(2);
+        builder.setMemMinCapacity(2);
+        builder.setMemMaxCapacity(2);
+        builder.setDiskMaxBytes(0);
+        builder.setSerializer(serializer);
+        builder.setPath(path);
+        builder.setNumBackgroundThreads(0);
+        builder.setShutdownHook(false);
+        builder.setCompress(true);
+        builder.setMemoryDouble(false);
+        builder.setTerminationWait(Duration.ofMinutes(2));
+        DiskBackedQueue<String> queue = builder.build();
+        for (int i = 0; i < ELEMENTS.size(); i++) {
+            queue.put(ELEMENTS.get(i), null);
+        }
+        assertTrue(filecount(path) > 0);
+        int drained = queue.drainTo(drain, maxElements);
+        assertEquals(Math.min(ELEMENTS.size(), maxElements), drained);
+        assertEquals(drained, drain.size());
+        if (drained == ELEMENTS.size()) {
+            assertEquals(null, queue.poll());
+        } else {
+            assertEquals(ELEMENTS.get(drained), queue.poll());
+        }
+        queue.close();
+        LessPaths.recursiveDelete(path);
+    }
+
+    @Test
+    public void drainToWithMaxElements() throws Exception {
+        for (int i = 0; i <= (ELEMENTS.size() + 1); i++) {
+            drainToWithMaxElements(i);
+        }
     }
 
     @Test

@@ -21,8 +21,9 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 
 import java.util.AbstractQueue;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import java.nio.file.Path;
@@ -54,8 +55,12 @@ import com.google.common.primitives.Ints;
  * default values that lead to behavior surprises for your application.
  * Refer to {@link DiskBackedQueueInternals} for the
  * the implementation.
+ *
+ * <p>The {@link #iterator()} method throws an <code>UnsupportedOperationException</code>. Methods that are
+ * implemented using the iterator such as {@link #contains(Object)} and {@link #remove(Object)}
+ * throw an <code>UnsupportedOperationException</code>.</p>
  */
-public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, Queue<E> {
+public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, BlockingQueue<E> {
 
     private final DiskBackedQueueInternals<E> queue;
 
@@ -259,15 +264,6 @@ public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, Q
     }
 
     /**
-     * {@inheritDoc}
-     * @throws UncheckedIOException if error reading from or writing to the backing store
-     */
-    @Override
-    public boolean offer(E e) {
-        return offer(e, null);
-    }
-
-    /**
      * Retrieves and removes the head of this queue,
      * or returns {@code null} if this queue is empty.
      *
@@ -286,12 +282,30 @@ public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, Q
         }
     }
 
+    @Override
+    public int drainTo(Collection<? super E> collection, int maxElements) throws UncheckedIOException {
+        try {
+            return queue.drainTo(collection, maxElements);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
+    @Override
+    public int drainTo(Collection<? super E> collection) throws UncheckedIOException {
+        try {
+            return queue.drainTo(collection, Integer.MAX_VALUE);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
     /**
      * {@inheritDoc}
      * @throws UncheckedIOException if error reading from or writing to the backing store
      */
     @Override
-    public E peek() {
+    public E peek() throws UncheckedIOException {
         try {
             return queue.get(false, 0, TimeUnit.MILLISECONDS);
         } catch (InterruptedException ex) {
@@ -315,6 +329,7 @@ public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, Q
      * @throws InterruptedException if interrupted while waiting
      * @throws UncheckedIOException if error reading from or writing to the backing store
      */
+    @Override
     public E poll(long timeout, TimeUnit unit) throws UncheckedIOException, InterruptedException {
         Preconditions.checkNotNull(unit);
         try {
@@ -322,6 +337,11 @@ public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, Q
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
+    }
+
+    @Override
+    public int remainingCapacity() {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -332,12 +352,22 @@ public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, Q
      * @throws InterruptedException if interrupted while waiting
      * @throws UncheckedIOException if error reading from or writing to the backing store
      */
+    @Override
     public E take() throws UncheckedIOException, InterruptedException {
         try {
             return queue.get(true, 0, null);
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @throws UncheckedIOException if error reading from or writing to the backing store
+     */
+    @Override
+    public void put(E e) throws UncheckedIOException, InterruptedException {
+        put(e, null);
     }
 
     /**
@@ -405,6 +435,24 @@ public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, Q
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @throws UncheckedIOException if error reading from or writing to the backing store
+     */
+    @Override
+    public boolean offer(E e) {
+        return offer(e, null);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @throws UncheckedIOException if error reading from or writing to the backing store
+     */
+    @Override
+    public boolean offer(E e, long timeout, TimeUnit unit) throws UncheckedIOException, InterruptedException {
+        return offer(e, null, timeout, unit);
     }
 
     public long getDiskByteUsage() { return queue.getDiskByteUsage(); }

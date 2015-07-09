@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicLong;
 
 import java.nio.file.Files;
@@ -134,6 +135,18 @@ class Page<E> {
         count = 0;
         readerIndex = 0;
         writerIndex = 0;
+    }
+
+    int drainTo(Collection<? super E> collection, int drainCount, int maxElements) {
+        assert(!empty());
+        while ((count > 0) && (drainCount < maxElements)) {
+            collection.add((E) elements[readerIndex].value);
+            readerIndex = (readerIndex + 1) % pageSize;
+            queueSize.getAndDecrement();
+            count--;
+            drainCount++;
+        }
+        return drainCount;
     }
 
     E get(boolean remove) {

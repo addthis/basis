@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -254,7 +255,7 @@ class DiskBackedQueueInternals<E> implements Closeable {
         }
     }
 
-    private boolean drainQueue(NavigableMap<Long,Page<E>> queue, long endTime, boolean diskQueue) throws IOException {
+    private boolean flushQueue(NavigableMap<Long, Page<E>> queue, long endTime, boolean diskQueue) throws IOException {
         if ((endTime > 0) && (System.currentTimeMillis() >= endTime)) {
             return false;
         }
@@ -375,6 +376,46 @@ class DiskBackedQueueInternals<E> implements Closeable {
             return true;
         } else {
             return false;
+        }
+    }
+
+    int drainTo(Collection<? super E> collection, int maxElements) throws IOException {
+        if (closed.get()) {
+            throw new IllegalStateException("attempted read after close()");
+        } else if (collection == null) {
+            throw new NullPointerException();
+        } else if (collection == this) {
+            throw new IllegalArgumentException();
+        } else if (maxElements <= 0) {
+            return 0;
+        }
+        int count = 0;
+        propagateError();
+        lock.lock();
+        try {
+            while (true) {
+                if (closed.get()) {
+                    throw new IllegalStateException("read did not complete before close()");
+                }
+                long nextId = readPage.id + 1;
+                if (!readPage.empty()) {
+                    count = readPage.drainTo(collection, count, maxElements);
+                } else if (fetchFromQueues(nextId)) {
+                    count = readPage.drainTo(collection, count, maxElements);
+                } else if ((nextId == writePage.id) && (readPage != writePage)) {
+                    readPage = writePage;
+                    notFull.signalAll();
+                } else if ((nextId < writePage.id) && loadPageFromFile(nextId)) {
+                    count = readPage.drainTo(collection, count, maxElements);
+                } else {
+                    return count;
+                }
+                if (count == maxElements) {
+                    return count;
+                }
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -591,10 +632,10 @@ class DiskBackedQueueInternals<E> implements Closeable {
                 }
                 hasTime = (System.currentTimeMillis() < endTime);
                 if (hasTime) {
-                    hasTime = drainQueue(readQueue, endTime, false);
+                    hasTime = flushQueue(readQueue, endTime, false);
                 }
                 if (hasTime && (diskQueue != null)) {
-                    hasTime = drainQueue(diskQueue, endTime, true);
+                    hasTime = flushQueue(diskQueue, endTime, true);
                 }
                 if (hasTime && !writePage.empty()) {
                     lock.lock();
