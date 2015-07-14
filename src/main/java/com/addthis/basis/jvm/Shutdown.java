@@ -125,7 +125,7 @@ public final class Shutdown {
 
     public static <T> void createWithShutdownHook(Supplier<T> creator, Consumer<T> hook) {
         CompletableFuture<Runnable> creationFuture = new CompletableFuture<>();
-        Thread shutdownHook = new Thread(creationFuture.join()::run, "Shutdown Hook for " + creator);
+        Thread shutdownHook = new Thread(() -> creationFuture.join().run(), "Shutdown Hook for " + creator);
         boolean hookAdded = tryAddShutdownHook(shutdownHook);
         if (hookAdded) {
             try {
