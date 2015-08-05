@@ -25,6 +25,7 @@ import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -44,6 +45,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
 
@@ -185,6 +187,16 @@ class DiskBackedQueueInternals<E> implements Closeable {
 
     private static final Predicate<Path> EXCLUDE_SIZEFILE = filepath -> !filepath.getFileName().equals(SIZEFILE);
 
+    private static Comparator<Path> COMPARE_FILENAMES = new Comparator<Path>() {
+
+        @Override public int compare(Path first, Path second) {
+            int firstInt = Integer.parseInt(first.getFileName().toString());
+            int secondInt = Integer.parseInt(second.getFileName().toString());
+            int result = Integer.compare(firstInt, secondInt);
+            return result;
+        }
+    };
+
     /**
      * Use {@link DiskBackedQueue.Builder} to construct a disk-backed queue.
      * Throws an exception the external directory cannot be created or opened.
@@ -232,9 +244,9 @@ class DiskBackedQueueInternals<E> implements Closeable {
         }
         Files.createDirectories(external);
         Optional<Path> minFile = Files.list(external).filter(EXCLUDE_SIZEFILE).min(
-                (f1, f2) -> (f1.getFileName().toString().compareTo(f2.getFileName().toString())));
+                (f1, f2) -> (COMPARE_FILENAMES.compare(f1, f2)));
         Optional<Path> maxFile = Files.list(external).filter(EXCLUDE_SIZEFILE).max(
-                (f1, f2) -> (f2.getFileName().toString().compareTo(f1.getFileName().toString())));
+                (f1, f2) -> (COMPARE_FILENAMES.compare(f1, f2)));
         if (minFile.isPresent() && maxFile.isPresent()) {
             long readPageId, writePageId;
             readPageId  = Long.parseLong(minFile.get().getFileName().toString());

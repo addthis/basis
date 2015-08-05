@@ -162,6 +162,34 @@ public class TestDiskBackedQueue {
         LessPaths.recursiveDelete(path);
     }
 
+    @Test
+    public void onDiskWithBackgroundThreads() throws Exception {
+        Path path = Files.createTempDirectory("dbq-test");
+        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+        builder.setPageSize(2);
+        builder.setMemMinCapacity(2);
+        builder.setMemMaxCapacity(2);
+        builder.setDiskMaxBytes(0);
+        builder.setSerializer(serializer);
+        builder.setPath(path);
+        builder.setNumBackgroundThreads(0);
+        builder.setShutdownHook(false);
+        builder.setCompress(true);
+        builder.setMemoryDouble(false);
+        builder.setTerminationWait(Duration.ofMinutes(2));
+        DiskBackedQueue<String> queue = builder.build();
+        for(int i = 0; i < 1000; i++) {
+            queue.put(Integer.toString(i), null);
+        }
+        assertTrue(filecount(path) > 0);
+        queue.close();
+        queue = builder.build();
+        for(int i = 0; i < 1000; i++) {
+            assertEquals(Integer.toString(i), queue.poll());
+        }
+        LessPaths.recursiveDelete(path);
+    }
+
     private void drainToWithMaxElements(int maxElements) throws Exception {
         Path path = Files.createTempDirectory("dbq-test");
         DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
