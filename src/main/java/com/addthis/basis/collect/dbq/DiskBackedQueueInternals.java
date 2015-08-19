@@ -45,10 +45,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
 
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -185,7 +185,10 @@ class DiskBackedQueueInternals<E> implements Closeable {
 
     private static final Path SIZEFILE = Paths.get("size");
 
-    private static final Predicate<Path> EXCLUDE_SIZEFILE = filepath -> !filepath.getFileName().equals(SIZEFILE);
+    private static final Path LOCKFILE = Paths.get("lock");
+
+    private static final Predicate<Path> EXCLUDE_METAFILES = filepath -> !filepath.getFileName().equals(SIZEFILE)
+                                                                         && !filepath.getFileName().equals(LOCKFILE);
 
     private static Comparator<Path> COMPARE_FILENAMES = new Comparator<Path>() {
 
@@ -243,9 +246,16 @@ class DiskBackedQueueInternals<E> implements Closeable {
             }
         }
         Files.createDirectories(external);
-        Optional<Path> minFile = Files.list(external).filter(EXCLUDE_SIZEFILE).min(
+        try {
+            Files.createFile(external.resolve(LOCKFILE));
+        } catch (FileAlreadyExistsException ex) {
+            throw new IOException("The lock file for " + external.toString() + " already exists. " +
+                                  "Either a concurrent attempt to open this queue" +
+                                  " or the queue was not shutdown cleanly.");
+        }
+        Optional<Path> minFile = Files.list(external).filter(EXCLUDE_METAFILES).min(
                 (f1, f2) -> (COMPARE_FILENAMES.compare(f1, f2)));
-        Optional<Path> maxFile = Files.list(external).filter(EXCLUDE_SIZEFILE).max(
+        Optional<Path> maxFile = Files.list(external).filter(EXCLUDE_METAFILES).max(
                 (f1, f2) -> (COMPARE_FILENAMES.compare(f1, f2)));
         if (minFile.isPresent() && maxFile.isPresent()) {
             long readPageId, writePageId;
@@ -667,7 +677,8 @@ class DiskBackedQueueInternals<E> implements Closeable {
                          "Approximately {} pages were not written to disk.", unwritten);
                     writeSize -= unwritten * pageSize;
                 }
-                Files.write(external.resolve("size"), Long.toString(writeSize).getBytes());
+                Files.write(external.resolve(SIZEFILE), Long.toString(writeSize).getBytes());
+                Files.delete(external.resolve(LOCKFILE));
                 IOException previous = error.get();
                 if (previous != null) {
                     closeFuture.completeExceptionally(previous);

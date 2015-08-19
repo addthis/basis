@@ -91,7 +91,7 @@ public class TestDiskBackedQueue {
         assertEquals("hello", queue.poll());
         assertEquals("world", queue.poll());
         assertNull(queue.poll());
-        assertEquals(0, filecount(path));
+        assertEquals(1, filecount(path));
         queue.close();
         LessPaths.recursiveDelete(path);
     }
@@ -117,13 +117,13 @@ public class TestDiskBackedQueue {
         queue.put("foo", null);
         queue.put("barbaz", null);
         // we cannot serialize a page that is referenced by the readPage
-        assertEquals(0, filecount(path));
+        assertEquals(1, filecount(path));
         assertEquals("hello", queue.poll());
         assertEquals("world", queue.poll());
         assertEquals("foo", queue.poll());
         assertEquals("barbaz", queue.poll());
         assertNull(queue.poll());
-        assertEquals(0, filecount(path));
+        assertEquals(1, filecount(path));
         queue.close();
         LessPaths.recursiveDelete(path);
     }
@@ -262,6 +262,34 @@ public class TestDiskBackedQueue {
         assertTrue(queue.offer("gggggggggggg", null));
         queue.close();
         LessPaths.recursiveDelete(path);
+    }
+
+    @Test
+    public void doubleOpenError() throws Exception {
+        Path path = Files.createTempDirectory("dbq-test");
+        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+        builder.setPageSize(1024);
+        builder.setMemMinCapacity(1024);
+        builder.setMemMaxCapacity(1024);
+        builder.setDiskMaxBytes(0);
+        builder.setSerializer(serializer);
+        builder.setPath(path);
+        builder.setNumBackgroundThreads(0);
+        builder.setShutdownHook(false);
+        builder.setCompress(true);
+        builder.setMemoryDouble(false);
+        builder.setTerminationWait(Duration.ofMinutes(2));
+        String error = null;
+        builder.build();
+        try {
+            builder.build();
+        } catch (IOException ex) {
+            error = ex.getMessage();
+        }
+        LessPaths.recursiveDelete(path);
+        assertEquals("The lock file for " + path.toString() +
+                     " already exists. Either a concurrent attempt to open " +
+                     "this queue or the queue was not shutdown cleanly.", error);
     }
 
     @Test
