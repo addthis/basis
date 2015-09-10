@@ -80,6 +80,8 @@ class DiskBackedQueueInternals<E> implements Closeable {
 
     final long maxDiskBytes;
 
+    final long maxSize;
+
     final Serializer<E> serializer;
 
     final Duration terminationWait;
@@ -205,13 +207,14 @@ class DiskBackedQueueInternals<E> implements Closeable {
      * Throws an exception the external directory cannot be created or opened.
      */
     DiskBackedQueueInternals(int pageSize, int minPages, int maxPages, long maxDiskBytes,
-                             int numBackgroundThreads, Path path, Serializer<E> serializer,
+                             long maxSize, int numBackgroundThreads, Path path, Serializer<E> serializer,
                              Duration terminationWait, boolean shutdownHook, boolean silent,
                              boolean compress, int compressionLevel, int compressionBuffer,
                              boolean memoryDouble, boolean sharedScheduler) throws IOException {
         this.pageSize = pageSize;
         this.maxPages = maxPages;
         this.maxDiskBytes = maxDiskBytes;
+        this.maxSize = maxSize;
         this.external = path;
         this.serializer = serializer;
         this.terminationWait = terminationWait;
@@ -499,6 +502,11 @@ class DiskBackedQueueInternals<E> implements Closeable {
         }
     }
 
+    private boolean overCapacity() {
+        return ((maxDiskBytes > 0) && (diskByteUsage.get() > maxDiskBytes)) ||
+               ((maxSize > 0) && (queueSize.get() >= maxSize));
+    }
+
     /**
      * Inserts the specified element into this queue if it is possible
      * to do so without violating disk capacity restrictions.
@@ -534,7 +542,7 @@ class DiskBackedQueueInternals<E> implements Closeable {
                     testNotEmpty();
                     fastWrite.getAndIncrement();
                     return true;
-                } else if ((maxDiskBytes > 0) && (diskByteUsage.get() > maxDiskBytes)) {
+                } else if (overCapacity()) {
                     if (unit == null) {
                         notFull.await();
                     } else if (nanos <= 0L) {

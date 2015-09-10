@@ -265,6 +265,42 @@ public class TestDiskBackedQueue {
     }
 
     @Test
+    public void maxSize() throws Exception {
+        Path path = Files.createTempDirectory("dbq-test");
+        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+        builder.setPageSize(2);
+        builder.setMemMinCapacity(2);
+        builder.setMemMaxCapacity(2);
+        builder.setDiskMaxBytes(0);
+        builder.setMaxSize(6);
+        builder.setSerializer(serializer);
+        builder.setPath(path);
+        builder.setNumBackgroundThreads(0);
+        builder.setShutdownHook(false);
+        builder.setCompress(false);
+        builder.setMemoryDouble(false);
+        builder.setTerminationWait(Duration.ofMinutes(2));
+        DiskBackedQueue<String> queue = builder.build();
+        assertTrue(queue.offer("aaaaaaaaaaaa", null));
+        assertTrue(queue.offer("bbbbbbbbbbbb", null));
+        assertTrue(queue.offer("cccccccccccc", null));
+        assertTrue(queue.offer("dddddddddddd", null));
+        assertTrue(queue.offer("eeeeeeeeeeee", null));
+        assertTrue(queue.offer("ffffffffffff", null));
+        assertFalse(queue.offer("gggggggggggg", null));
+        assertEquals("aaaaaaaaaaaa", queue.poll());
+        assertEquals("bbbbbbbbbbbb", queue.poll());
+        assertEquals("cccccccccccc", queue.poll());
+        assertEquals("dddddddddddd", queue.poll());
+        assertEquals("eeeeeeeeeeee", queue.poll());
+        assertEquals("ffffffffffff", queue.poll());
+        assertNull(queue.poll());
+        assertTrue(queue.offer("gggggggggggg", null));
+        queue.close();
+        LessPaths.recursiveDelete(path);
+    }
+
+    @Test
     public void doubleOpenError() throws Exception {
         Path path = Files.createTempDirectory("dbq-test");
         DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();

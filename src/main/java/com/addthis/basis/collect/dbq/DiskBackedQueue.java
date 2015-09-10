@@ -73,6 +73,7 @@ public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, B
         private int memMinCapacity = -1;
         private int memMaxCapacity = -1;
         private long diskMaxBytes = -1;
+        private long maxSize = 0;
         private int numBackgroundThreads = -1;
         private int compressionLevel = 9;
         private int compressionBuffer = 1024;
@@ -186,6 +187,15 @@ public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, B
         }
 
         /**
+         * Maximum number of elements that are allowed to be stored
+         * in the queue. Set to 0 to specify no upper bound. This parameter is optional.
+         */
+        public Builder<E> setMaxSize(long maxSize) {
+            this.maxSize = maxSize;
+            return this;
+        }
+
+        /**
          * If true then store the serialized representation of objects
          * along with the objects themselves. This improves
          * disk-writing performance at the cost of additional memory overhead.
@@ -242,6 +252,7 @@ public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, B
             Preconditions.checkArgument(memMinCapacity > 0, "memMinCapacity must be > 0");
             Preconditions.checkArgument(memMaxCapacity > 0, "memMaxCapacity must be > 0");
             Preconditions.checkArgument(diskMaxBytes >= 0, "diskMaxBytes must be >= 0");
+            Preconditions.checkArgument(maxSize >= 0, "maxSize must be >= 0");
             Preconditions.checkArgument(numBackgroundThreads >= 0, "numBackgroundThreads must be >= 0");
             Preconditions.checkNotNull(path, "path must be non-null");
             Preconditions.checkNotNull(serializer, "serializer must be non-null");
@@ -255,7 +266,7 @@ public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, B
             return new DiskBackedQueue<>(
                     new DiskBackedQueueInternals<>(pageSize, memMinCapacity / pageSize,
                                                    memMaxCapacity / pageSize,
-                                                   diskMaxBytes,
+                                                   diskMaxBytes, maxSize,
                                                    numBackgroundThreads, path, serializer,
                                                    terminationWait, shutdownHook, silent, compress,
                                                    compressionLevel, compressionBuffer, memoryDouble,
