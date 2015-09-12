@@ -503,7 +503,7 @@ class DiskBackedQueueInternals<E> implements Closeable {
     }
 
     private boolean overCapacity() {
-        return ((maxDiskBytes > 0) && (diskByteUsage.get() > maxDiskBytes)) ||
+        return ((maxDiskBytes > 0) && (diskByteUsage.get() >= maxDiskBytes)) ||
                ((maxSize > 0) && (queueSize.get() >= maxSize));
     }
 
