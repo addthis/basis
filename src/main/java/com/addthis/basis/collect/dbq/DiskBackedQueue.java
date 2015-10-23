@@ -87,6 +87,7 @@ public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, B
 
         // optional
         private boolean silent;
+        private boolean purgeOnInitErrors;
 
         /**
          * Number of elements that are stored per page. Larger
@@ -247,6 +248,16 @@ public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, B
             return this;
         }
 
+        /**
+         * If true then delete the contents on disk if there
+         * the queue was not previously shutdown correctly or if
+         * the serialization formats are incompatible. This parameter is optional.
+         */
+        public Builder<E> setPurgeOnInitErrors(boolean enable) {
+            this.purgeOnInitErrors = enable;
+            return this;
+        }
+
         public DiskBackedQueue<E> build() throws IOException {
             Preconditions.checkArgument(pageSize > 0, "pageSize must be > 0");
             Preconditions.checkArgument(memMinCapacity > 0, "memMinCapacity must be > 0");
@@ -270,7 +281,7 @@ public class DiskBackedQueue<E> extends AbstractQueue<E> implements Closeable, B
                                                    numBackgroundThreads, path, serializer,
                                                    terminationWait, shutdownHook, silent, compress,
                                                    compressionLevel, compressionBuffer, memoryDouble,
-                                                   sharedScheduler));
+                                                   sharedScheduler, purgeOnInitErrors));
         }
     }
 

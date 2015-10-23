@@ -73,153 +73,168 @@ public class TestDiskBackedQueue {
     @Test
     public void inMemoryWithoutBackgroundThreads() throws Exception {
         Path path = Files.createTempDirectory("dbq-test");
-        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
-        builder.setPageSize(1024);
-        builder.setMemMinCapacity(1024);
-        builder.setMemMaxCapacity(1024);
-        builder.setDiskMaxBytes(0);
-        builder.setSerializer(serializer);
-        builder.setPath(path);
-        builder.setNumBackgroundThreads(0);
-        builder.setTerminationWait(Duration.ofMinutes(2));
-        builder.setShutdownHook(false);
-        builder.setCompress(true);
-        builder.setMemoryDouble(false);
-        DiskBackedQueue<String> queue = builder.build();
-        queue.put("hello", null);
-        queue.put("world", null);
-        assertEquals("hello", queue.poll());
-        assertEquals("world", queue.poll());
-        assertNull(queue.poll());
-        assertEquals(1, filecount(path));
-        queue.close();
-        LessPaths.recursiveDelete(path);
+        try {
+            DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+            builder.setPageSize(1024);
+            builder.setMemMinCapacity(1024);
+            builder.setMemMaxCapacity(1024);
+            builder.setDiskMaxBytes(0);
+            builder.setSerializer(serializer);
+            builder.setPath(path);
+            builder.setNumBackgroundThreads(0);
+            builder.setTerminationWait(Duration.ofMinutes(2));
+            builder.setShutdownHook(false);
+            builder.setCompress(true);
+            builder.setMemoryDouble(false);
+            DiskBackedQueue<String> queue = builder.build();
+            queue.put("hello", null);
+            queue.put("world", null);
+            assertEquals("hello", queue.poll());
+            assertEquals("world", queue.poll());
+            assertNull(queue.poll());
+            assertEquals(1, filecount(path));
+            queue.close();
+        } finally {
+            LessPaths.recursiveDelete(path);
+        }
     }
 
     @Test
     public void multiPageWithoutBackgroundThreads() throws Exception {
         Path path = Files.createTempDirectory("dbq-test");
-        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
-        builder.setPageSize(2);
-        builder.setMemMinCapacity(2);
-        builder.setMemMaxCapacity(2);
-        builder.setDiskMaxBytes(0);
-        builder.setSerializer(serializer);
-        builder.setPath(path);
-        builder.setNumBackgroundThreads(0);
-        builder.setShutdownHook(false);
-        builder.setCompress(true);
-        builder.setMemoryDouble(false);
-        builder.setTerminationWait(Duration.ofMinutes(2));
-        DiskBackedQueue<String> queue = builder.build();
-        queue.put("hello", null);
-        queue.put("world", null);
-        queue.put("foo", null);
-        queue.put("barbaz", null);
-        // we cannot serialize a page that is referenced by the readPage
-        assertEquals(1, filecount(path));
-        assertEquals("hello", queue.poll());
-        assertEquals("world", queue.poll());
-        assertEquals("foo", queue.poll());
-        assertEquals("barbaz", queue.poll());
-        assertNull(queue.poll());
-        assertEquals(1, filecount(path));
-        queue.close();
-        LessPaths.recursiveDelete(path);
+        try {
+            DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+            builder.setPageSize(2);
+            builder.setMemMinCapacity(2);
+            builder.setMemMaxCapacity(2);
+            builder.setDiskMaxBytes(0);
+            builder.setSerializer(serializer);
+            builder.setPath(path);
+            builder.setNumBackgroundThreads(0);
+            builder.setShutdownHook(false);
+            builder.setCompress(true);
+            builder.setMemoryDouble(false);
+            builder.setTerminationWait(Duration.ofMinutes(2));
+            DiskBackedQueue<String> queue = builder.build();
+            queue.put("hello", null);
+            queue.put("world", null);
+            queue.put("foo", null);
+            queue.put("barbaz", null);
+            // we cannot serialize a page that is referenced by the readPage
+            assertEquals(1, filecount(path));
+            assertEquals("hello", queue.poll());
+            assertEquals("world", queue.poll());
+            assertEquals("foo", queue.poll());
+            assertEquals("barbaz", queue.poll());
+            assertNull(queue.poll());
+            assertEquals(1, filecount(path));
+            queue.close();
+        } finally {
+            LessPaths.recursiveDelete(path);
+        }
     }
 
     @Test
     public void onDiskWithoutBackgroundThreads() throws Exception {
         Path path = Files.createTempDirectory("dbq-test");
-        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
-        builder.setPageSize(2);
-        builder.setMemMinCapacity(2);
-        builder.setMemMaxCapacity(2);
-        builder.setDiskMaxBytes(0);
-        builder.setSerializer(serializer);
-        builder.setPath(path);
-        builder.setNumBackgroundThreads(0);
-        builder.setShutdownHook(false);
-        builder.setCompress(true);
-        builder.setMemoryDouble(false);
-        builder.setTerminationWait(Duration.ofMinutes(2));
-        DiskBackedQueue<String> queue = builder.build();
-        queue.put("hello", null);
-        queue.put("world", null);
-        queue.put("foo", null);
-        queue.put("bar", null);
-        queue.put("baz", null);
-        queue.put("quux", null);
-        assertTrue(filecount(path) > 0);
-        assertEquals("hello", queue.poll());
-        assertEquals("world", queue.poll());
-        assertEquals("foo", queue.poll());
-        assertEquals("bar", queue.poll());
-        assertEquals("baz", queue.poll());
-        assertEquals("quux", queue.poll());
-        assertNull(queue.poll());
-        queue.close();
-        LessPaths.recursiveDelete(path);
+        try {
+            DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+            builder.setPageSize(2);
+            builder.setMemMinCapacity(2);
+            builder.setMemMaxCapacity(2);
+            builder.setDiskMaxBytes(0);
+            builder.setSerializer(serializer);
+            builder.setPath(path);
+            builder.setNumBackgroundThreads(0);
+            builder.setShutdownHook(false);
+            builder.setCompress(true);
+            builder.setMemoryDouble(false);
+            builder.setTerminationWait(Duration.ofMinutes(2));
+            DiskBackedQueue<String> queue = builder.build();
+            queue.put("hello", null);
+            queue.put("world", null);
+            queue.put("foo", null);
+            queue.put("bar", null);
+            queue.put("baz", null);
+            queue.put("quux", null);
+            assertTrue(filecount(path) > 0);
+            assertEquals("hello", queue.poll());
+            assertEquals("world", queue.poll());
+            assertEquals("foo", queue.poll());
+            assertEquals("bar", queue.poll());
+            assertEquals("baz", queue.poll());
+            assertEquals("quux", queue.poll());
+            assertNull(queue.poll());
+            queue.close();
+        } finally {
+            LessPaths.recursiveDelete(path);
+        }
     }
 
     @Test
     public void onDiskWithBackgroundThreads() throws Exception {
         Path path = Files.createTempDirectory("dbq-test");
-        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
-        builder.setPageSize(2);
-        builder.setMemMinCapacity(2);
-        builder.setMemMaxCapacity(2);
-        builder.setDiskMaxBytes(0);
-        builder.setSerializer(serializer);
-        builder.setPath(path);
-        builder.setNumBackgroundThreads(0);
-        builder.setShutdownHook(false);
-        builder.setCompress(true);
-        builder.setMemoryDouble(false);
-        builder.setTerminationWait(Duration.ofMinutes(2));
-        DiskBackedQueue<String> queue = builder.build();
-        for(int i = 0; i < 1000; i++) {
-            queue.put(Integer.toString(i), null);
+        try {
+            DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+            builder.setPageSize(2);
+            builder.setMemMinCapacity(2);
+            builder.setMemMaxCapacity(2);
+            builder.setDiskMaxBytes(0);
+            builder.setSerializer(serializer);
+            builder.setPath(path);
+            builder.setNumBackgroundThreads(0);
+            builder.setShutdownHook(false);
+            builder.setCompress(true);
+            builder.setMemoryDouble(false);
+            builder.setTerminationWait(Duration.ofMinutes(2));
+            DiskBackedQueue<String> queue = builder.build();
+            for (int i = 0; i < 1000; i++) {
+                queue.put(Integer.toString(i), null);
+            }
+            assertTrue(filecount(path) > 0);
+            queue.close();
+            queue = builder.build();
+            for (int i = 0; i < 1000; i++) {
+                assertEquals(Integer.toString(i), queue.poll());
+            }
+        } finally {
+            LessPaths.recursiveDelete(path);
         }
-        assertTrue(filecount(path) > 0);
-        queue.close();
-        queue = builder.build();
-        for(int i = 0; i < 1000; i++) {
-            assertEquals(Integer.toString(i), queue.poll());
-        }
-        LessPaths.recursiveDelete(path);
     }
 
     private void drainToWithMaxElements(int maxElements) throws Exception {
         Path path = Files.createTempDirectory("dbq-test");
-        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
-        List<String> drain = new ArrayList<>();
-        builder.setPageSize(2);
-        builder.setMemMinCapacity(2);
-        builder.setMemMaxCapacity(2);
-        builder.setDiskMaxBytes(0);
-        builder.setSerializer(serializer);
-        builder.setPath(path);
-        builder.setNumBackgroundThreads(0);
-        builder.setShutdownHook(false);
-        builder.setCompress(true);
-        builder.setMemoryDouble(false);
-        builder.setTerminationWait(Duration.ofMinutes(2));
-        DiskBackedQueue<String> queue = builder.build();
-        for (int i = 0; i < ELEMENTS.size(); i++) {
-            queue.put(ELEMENTS.get(i), null);
+        try {
+            DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+            List<String> drain = new ArrayList<>();
+            builder.setPageSize(2);
+            builder.setMemMinCapacity(2);
+            builder.setMemMaxCapacity(2);
+            builder.setDiskMaxBytes(0);
+            builder.setSerializer(serializer);
+            builder.setPath(path);
+            builder.setNumBackgroundThreads(0);
+            builder.setShutdownHook(false);
+            builder.setCompress(true);
+            builder.setMemoryDouble(false);
+            builder.setTerminationWait(Duration.ofMinutes(2));
+            DiskBackedQueue<String> queue = builder.build();
+            for (int i = 0; i < ELEMENTS.size(); i++) {
+                queue.put(ELEMENTS.get(i), null);
+            }
+            assertTrue(filecount(path) > 0);
+            int drained = queue.drainTo(drain, maxElements);
+            assertEquals(Math.min(ELEMENTS.size(), maxElements), drained);
+            assertEquals(drained, drain.size());
+            if (drained == ELEMENTS.size()) {
+                assertEquals(null, queue.poll());
+            } else {
+                assertEquals(ELEMENTS.get(drained), queue.poll());
+            }
+            queue.close();
+        } finally {
+            LessPaths.recursiveDelete(path);
         }
-        assertTrue(filecount(path) > 0);
-        int drained = queue.drainTo(drain, maxElements);
-        assertEquals(Math.min(ELEMENTS.size(), maxElements), drained);
-        assertEquals(drained, drain.size());
-        if (drained == ELEMENTS.size()) {
-            assertEquals(null, queue.poll());
-        } else {
-            assertEquals(ELEMENTS.get(drained), queue.poll());
-        }
-        queue.close();
-        LessPaths.recursiveDelete(path);
     }
 
     @Test
@@ -232,190 +247,274 @@ public class TestDiskBackedQueue {
     @Test
     public void maxDiskCapacity() throws Exception {
         Path path = Files.createTempDirectory("dbq-test");
-        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
-        builder.setPageSize(2);
-        builder.setMemMinCapacity(2);
-        builder.setMemMaxCapacity(2);
-        builder.setDiskMaxBytes(30);
-        builder.setSerializer(serializer);
-        builder.setPath(path);
-        builder.setNumBackgroundThreads(0);
-        builder.setShutdownHook(false);
-        builder.setCompress(false);
-        builder.setMemoryDouble(false);
-        builder.setTerminationWait(Duration.ofMinutes(2));
-        DiskBackedQueue<String> queue = builder.build();
-        assertTrue(queue.offer("aaaaaaaaaaaa", null));
-        assertTrue(queue.offer("bbbbbbbbbbbb", null));
-        assertTrue(queue.offer("cccccccccccc", null));
-        assertTrue(queue.offer("dddddddddddd", null));
-        assertTrue(queue.offer("eeeeeeeeeeee", null));
-        assertTrue(queue.offer("ffffffffffff", null));
-        assertFalse(queue.offer("gggggggggggg", null));
-        assertEquals("aaaaaaaaaaaa", queue.poll());
-        assertEquals("bbbbbbbbbbbb", queue.poll());
-        assertEquals("cccccccccccc", queue.poll());
-        assertEquals("dddddddddddd", queue.poll());
-        assertEquals("eeeeeeeeeeee", queue.poll());
-        assertEquals("ffffffffffff", queue.poll());
-        assertNull(queue.poll());
-        assertTrue(queue.offer("gggggggggggg", null));
-        queue.close();
-        LessPaths.recursiveDelete(path);
+        try {
+            DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+            builder.setPageSize(2);
+            builder.setMemMinCapacity(2);
+            builder.setMemMaxCapacity(2);
+            builder.setDiskMaxBytes(30);
+            builder.setSerializer(serializer);
+            builder.setPath(path);
+            builder.setNumBackgroundThreads(0);
+            builder.setShutdownHook(false);
+            builder.setCompress(false);
+            builder.setMemoryDouble(false);
+            builder.setTerminationWait(Duration.ofMinutes(2));
+            DiskBackedQueue<String> queue = builder.build();
+            assertTrue(queue.offer("aaaaaaaaaaaa", null));
+            assertTrue(queue.offer("bbbbbbbbbbbb", null));
+            assertTrue(queue.offer("cccccccccccc", null));
+            assertTrue(queue.offer("dddddddddddd", null));
+            assertTrue(queue.offer("eeeeeeeeeeee", null));
+            assertTrue(queue.offer("ffffffffffff", null));
+            assertFalse(queue.offer("gggggggggggg", null));
+            assertEquals("aaaaaaaaaaaa", queue.poll());
+            assertEquals("bbbbbbbbbbbb", queue.poll());
+            assertEquals("cccccccccccc", queue.poll());
+            assertEquals("dddddddddddd", queue.poll());
+            assertEquals("eeeeeeeeeeee", queue.poll());
+            assertEquals("ffffffffffff", queue.poll());
+            assertNull(queue.poll());
+            assertTrue(queue.offer("gggggggggggg", null));
+            queue.close();
+        } finally {
+            LessPaths.recursiveDelete(path);
+        }
     }
 
     @Test
     public void maxSize() throws Exception {
         Path path = Files.createTempDirectory("dbq-test");
-        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
-        builder.setPageSize(2);
-        builder.setMemMinCapacity(2);
-        builder.setMemMaxCapacity(2);
-        builder.setDiskMaxBytes(0);
-        builder.setMaxSize(6);
-        builder.setSerializer(serializer);
-        builder.setPath(path);
-        builder.setNumBackgroundThreads(0);
-        builder.setShutdownHook(false);
-        builder.setCompress(false);
-        builder.setMemoryDouble(false);
-        builder.setTerminationWait(Duration.ofMinutes(2));
-        DiskBackedQueue<String> queue = builder.build();
-        assertTrue(queue.offer("aaaaaaaaaaaa", null));
-        assertTrue(queue.offer("bbbbbbbbbbbb", null));
-        assertTrue(queue.offer("cccccccccccc", null));
-        assertTrue(queue.offer("dddddddddddd", null));
-        assertTrue(queue.offer("eeeeeeeeeeee", null));
-        assertTrue(queue.offer("ffffffffffff", null));
-        assertFalse(queue.offer("gggggggggggg", null));
-        assertEquals("aaaaaaaaaaaa", queue.poll());
-        assertEquals("bbbbbbbbbbbb", queue.poll());
-        assertEquals("cccccccccccc", queue.poll());
-        assertEquals("dddddddddddd", queue.poll());
-        assertEquals("eeeeeeeeeeee", queue.poll());
-        assertEquals("ffffffffffff", queue.poll());
-        assertNull(queue.poll());
-        assertTrue(queue.offer("gggggggggggg", null));
-        queue.close();
-        LessPaths.recursiveDelete(path);
+        try {
+            DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+            builder.setPageSize(2);
+            builder.setMemMinCapacity(2);
+            builder.setMemMaxCapacity(2);
+            builder.setDiskMaxBytes(0);
+            builder.setMaxSize(6);
+            builder.setSerializer(serializer);
+            builder.setPath(path);
+            builder.setNumBackgroundThreads(0);
+            builder.setShutdownHook(false);
+            builder.setCompress(false);
+            builder.setMemoryDouble(false);
+            builder.setTerminationWait(Duration.ofMinutes(2));
+            DiskBackedQueue<String> queue = builder.build();
+            assertTrue(queue.offer("aaaaaaaaaaaa", null));
+            assertTrue(queue.offer("bbbbbbbbbbbb", null));
+            assertTrue(queue.offer("cccccccccccc", null));
+            assertTrue(queue.offer("dddddddddddd", null));
+            assertTrue(queue.offer("eeeeeeeeeeee", null));
+            assertTrue(queue.offer("ffffffffffff", null));
+            assertFalse(queue.offer("gggggggggggg", null));
+            assertEquals("aaaaaaaaaaaa", queue.poll());
+            assertEquals("bbbbbbbbbbbb", queue.poll());
+            assertEquals("cccccccccccc", queue.poll());
+            assertEquals("dddddddddddd", queue.poll());
+            assertEquals("eeeeeeeeeeee", queue.poll());
+            assertEquals("ffffffffffff", queue.poll());
+            assertNull(queue.poll());
+            assertTrue(queue.offer("gggggggggggg", null));
+            queue.close();
+        } finally {
+            LessPaths.recursiveDelete(path);
+        }
+    }
+
+    @Test(expected=IOException.class)
+    public void garbageSerializedData() throws Exception {
+        Path path = Files.createTempDirectory("dbq-test");
+        Path file = path.resolve("0");
+        Files.createFile(file);
+        try {
+            DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+            builder.setPageSize(1024);
+            builder.setMemMinCapacity(1024);
+            builder.setMemMaxCapacity(1024);
+            builder.setDiskMaxBytes(0);
+            builder.setSerializer(serializer);
+            builder.setPath(path);
+            builder.setNumBackgroundThreads(0);
+            builder.setShutdownHook(false);
+            builder.setCompress(true);
+            builder.setMemoryDouble(false);
+            builder.setTerminationWait(Duration.ofMinutes(2));
+            builder.build();
+        } finally {
+            LessPaths.recursiveDelete(path);
+        }
     }
 
     @Test
+    public void garbageSerializedDataPurge() throws Exception {
+        Path path = Files.createTempDirectory("dbq-test");
+        Path file = path.resolve("0");
+        Files.createFile(file);
+        try {
+            DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+            builder.setPageSize(1024);
+            builder.setMemMinCapacity(1024);
+            builder.setMemMaxCapacity(1024);
+            builder.setDiskMaxBytes(0);
+            builder.setSerializer(serializer);
+            builder.setPath(path);
+            builder.setNumBackgroundThreads(0);
+            builder.setShutdownHook(false);
+            builder.setCompress(true);
+            builder.setMemoryDouble(false);
+            builder.setTerminationWait(Duration.ofMinutes(2));
+            builder.setPurgeOnInitErrors(true);
+            builder.build();
+        } finally {
+            LessPaths.recursiveDelete(path);
+        }
+    }
+
+
+    @Test(expected=IOException.class)
     public void doubleOpenError() throws Exception {
         Path path = Files.createTempDirectory("dbq-test");
-        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
-        builder.setPageSize(1024);
-        builder.setMemMinCapacity(1024);
-        builder.setMemMaxCapacity(1024);
-        builder.setDiskMaxBytes(0);
-        builder.setSerializer(serializer);
-        builder.setPath(path);
-        builder.setNumBackgroundThreads(0);
-        builder.setShutdownHook(false);
-        builder.setCompress(true);
-        builder.setMemoryDouble(false);
-        builder.setTerminationWait(Duration.ofMinutes(2));
-        String error = null;
-        builder.build();
         try {
+            DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+            builder.setPageSize(1024);
+            builder.setMemMinCapacity(1024);
+            builder.setMemMaxCapacity(1024);
+            builder.setDiskMaxBytes(0);
+            builder.setSerializer(serializer);
+            builder.setPath(path);
+            builder.setNumBackgroundThreads(0);
+            builder.setShutdownHook(false);
+            builder.setCompress(true);
+            builder.setMemoryDouble(false);
+            builder.setTerminationWait(Duration.ofMinutes(2));
             builder.build();
-        } catch (IOException ex) {
-            error = ex.getMessage();
+            builder.build();
+        } finally {
+            LessPaths.recursiveDelete(path);
         }
-        LessPaths.recursiveDelete(path);
-        assertEquals("The lock file for " + path.toString() +
-                     " already exists. Either a concurrent attempt to open " +
-                     "this queue or the queue was not shutdown cleanly.", error);
+    }
+
+    @Test
+    public void doubleOpenPurge() throws Exception {
+        Path path = Files.createTempDirectory("dbq-test");
+        try {
+            DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+            builder.setPageSize(1024);
+            builder.setMemMinCapacity(1024);
+            builder.setMemMaxCapacity(1024);
+            builder.setDiskMaxBytes(0);
+            builder.setSerializer(serializer);
+            builder.setPath(path);
+            builder.setNumBackgroundThreads(0);
+            builder.setShutdownHook(false);
+            builder.setCompress(true);
+            builder.setMemoryDouble(false);
+            builder.setPurgeOnInitErrors(true);
+            builder.setTerminationWait(Duration.ofMinutes(2));
+            builder.build();
+            builder.build();
+        } finally {
+            LessPaths.recursiveDelete(path);
+        }
     }
 
     @Test
     public void closeAndReopenEmpty() throws Exception {
         Path path = Files.createTempDirectory("dbq-test");
-        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
-        builder.setPageSize(1024);
-        builder.setMemMinCapacity(1024);
-        builder.setMemMaxCapacity(1024);
-        builder.setDiskMaxBytes(0);
-        builder.setSerializer(serializer);
-        builder.setPath(path);
-        builder.setNumBackgroundThreads(0);
-        builder.setShutdownHook(false);
-        builder.setCompress(true);
-        builder.setMemoryDouble(false);
-        builder.setTerminationWait(Duration.ofMinutes(2));
-        DiskBackedQueue<String> queue = builder.build();
-        assertTrue(queue.getDiskByteUsage() == 0);
-        queue.close();
-        assertEquals(1, filecount(path));
-        assertEquals(0, queue.getDiskByteUsage());
-        queue = builder.build();
-        assertNull(queue.poll());
-        queue.close();
-        LessPaths.recursiveDelete(path);
+        try {
+            DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+            builder.setPageSize(1024);
+            builder.setMemMinCapacity(1024);
+            builder.setMemMaxCapacity(1024);
+            builder.setDiskMaxBytes(0);
+            builder.setSerializer(serializer);
+            builder.setPath(path);
+            builder.setNumBackgroundThreads(0);
+            builder.setShutdownHook(false);
+            builder.setCompress(true);
+            builder.setMemoryDouble(false);
+            builder.setTerminationWait(Duration.ofMinutes(2));
+            DiskBackedQueue<String> queue = builder.build();
+            assertTrue(queue.getDiskByteUsage() == 0);
+            queue.close();
+            assertEquals(1, filecount(path));
+            assertEquals(0, queue.getDiskByteUsage());
+            queue = builder.build();
+            assertNull(queue.poll());
+            queue.close();
+        } finally {
+            LessPaths.recursiveDelete(path);
+        }
     }
 
     @Test
     public void closeAndReopen() throws Exception {
         Path path = Files.createTempDirectory("dbq-test");
-        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
-        builder.setPageSize(1024);
-        builder.setMemMinCapacity(1024);
-        builder.setMemMaxCapacity(1024);
-        builder.setDiskMaxBytes(0);
-        builder.setSerializer(serializer);
-        builder.setPath(path);
-        builder.setNumBackgroundThreads(0);
-        builder.setShutdownHook(false);
-        builder.setCompress(true);
-        builder.setMemoryDouble(false);
-        builder.setTerminationWait(Duration.ofMinutes(2));
-        DiskBackedQueue<String> queue = builder.build();
-        assertTrue(queue.getDiskByteUsage() == 0);
-        queue.put("hello", null);
-        queue.put("world", null);
-        assertEquals(2, queue.size());
-        queue.close();
-        assertTrue(filecount(path) > 0);
-        assertTrue(queue.getDiskByteUsage() > 0);
-        queue = builder.build();
-        assertEquals(2, queue.size());
-        assertEquals("hello", queue.poll());
-        assertEquals("world", queue.poll());
-        assertNull(queue.poll());
-        queue.close();
-        LessPaths.recursiveDelete(path);
+        try {
+            DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+            builder.setPageSize(1024);
+            builder.setMemMinCapacity(1024);
+            builder.setMemMaxCapacity(1024);
+            builder.setDiskMaxBytes(0);
+            builder.setSerializer(serializer);
+            builder.setPath(path);
+            builder.setNumBackgroundThreads(0);
+            builder.setShutdownHook(false);
+            builder.setCompress(true);
+            builder.setMemoryDouble(false);
+            builder.setTerminationWait(Duration.ofMinutes(2));
+            DiskBackedQueue<String> queue = builder.build();
+            assertTrue(queue.getDiskByteUsage() == 0);
+            queue.put("hello", null);
+            queue.put("world", null);
+            assertEquals(2, queue.size());
+            queue.close();
+            assertTrue(filecount(path) > 0);
+            assertTrue(queue.getDiskByteUsage() > 0);
+            queue = builder.build();
+            assertEquals(2, queue.size());
+            assertEquals("hello", queue.poll());
+            assertEquals("world", queue.poll());
+            assertNull(queue.poll());
+            queue.close();
+        } finally {
+            LessPaths.recursiveDelete(path);
+        }
     }
 
     @Test
     public void serializableSerializer() throws Exception {
         Path path = Files.createTempDirectory("dbq-test");
-        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
-        builder.setPageSize(1024);
-        builder.setMemMinCapacity(1024);
-        builder.setMemMaxCapacity(1024);
-        builder.setDiskMaxBytes(0);
-        builder.setSerializer(serializableSerializer);
-        builder.setPath(path);
-        builder.setNumBackgroundThreads(0);
-        builder.setShutdownHook(false);
-        builder.setCompress(true);
-        builder.setMemoryDouble(false);
-        builder.setTerminationWait(Duration.ofMinutes(2));
-        DiskBackedQueue<String> queue = builder.build();
-        assertTrue(queue.getDiskByteUsage() == 0);
-        queue.put("hello", null);
-        queue.put("world", null);
-        assertEquals(2, queue.size());
-        queue.close();
-        assertTrue(filecount(path) > 0);
-        assertTrue(queue.getDiskByteUsage() > 0);
-        queue = builder.build();
-        assertEquals(2, queue.size());
-        assertEquals("hello", queue.poll());
-        assertEquals("world", queue.poll());
-        assertNull(queue.poll());
-        queue.close();
-        LessPaths.recursiveDelete(path);
+        try {
+            DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+            builder.setPageSize(1024);
+            builder.setMemMinCapacity(1024);
+            builder.setMemMaxCapacity(1024);
+            builder.setDiskMaxBytes(0);
+            builder.setSerializer(serializableSerializer);
+            builder.setPath(path);
+            builder.setNumBackgroundThreads(0);
+            builder.setShutdownHook(false);
+            builder.setCompress(true);
+            builder.setMemoryDouble(false);
+            builder.setTerminationWait(Duration.ofMinutes(2));
+            DiskBackedQueue<String> queue = builder.build();
+            assertTrue(queue.getDiskByteUsage() == 0);
+            queue.put("hello", null);
+            queue.put("world", null);
+            assertEquals(2, queue.size());
+            queue.close();
+            assertTrue(filecount(path) > 0);
+            assertTrue(queue.getDiskByteUsage() > 0);
+            queue = builder.build();
+            assertEquals(2, queue.size());
+            assertEquals("hello", queue.poll());
+            assertEquals("world", queue.poll());
+            assertNull(queue.poll());
+            queue.close();
+        } finally {
+            LessPaths.recursiveDelete(path);
+        }
     }
 
     private static int filecount(Path path) {
@@ -446,43 +545,46 @@ public class TestDiskBackedQueue {
                  "{} writers, and {} background threads",
                  numReaders, numWriters, numBackgroundThreads);
         Path path = Files.createTempDirectory("dbq-test");
-        DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
-        builder.setPageSize(32);
-        builder.setMemMinCapacity(128);
-        builder.setMemMaxCapacity(512);
-        builder.setDiskMaxBytes(0);
-        builder.setSerializer(serializer);
-        builder.setPath(path);
-        builder.setNumBackgroundThreads(numBackgroundThreads);
-        builder.setShutdownHook(false);
-        builder.setCompress(true);
-        builder.setMemoryDouble(false);
-        builder.setTerminationWait(Duration.ofMinutes(2));
-        builder.setSharedScheduler(sharedSheduler);
-        DiskBackedQueue<String> queue = builder.build();
-        Thread[] readers = new Thread[numReaders];
-        Thread[] writers = new Thread[numWriters];
-        AtomicInteger generator = new AtomicInteger();
-        AtomicBoolean finishedWriters = new AtomicBoolean();
-        WritersPhaser writersPhaser = new WritersPhaser(finishedWriters);
-        ConcurrentHashMap<String, String> values = new ConcurrentHashMap<>();
-        for (int i = 0; i < numReaders; i++) {
-            readers[i] = new Thread(new ReaderTask(values, queue, finishedWriters), "ReaderTask");
-            readers[i].start();
+        try {
+            DiskBackedQueue.Builder<String> builder = new DiskBackedQueue.Builder<>();
+            builder.setPageSize(32);
+            builder.setMemMinCapacity(128);
+            builder.setMemMaxCapacity(512);
+            builder.setDiskMaxBytes(0);
+            builder.setSerializer(serializer);
+            builder.setPath(path);
+            builder.setNumBackgroundThreads(numBackgroundThreads);
+            builder.setShutdownHook(false);
+            builder.setCompress(true);
+            builder.setMemoryDouble(false);
+            builder.setTerminationWait(Duration.ofMinutes(2));
+            builder.setSharedScheduler(sharedSheduler);
+            DiskBackedQueue<String> queue = builder.build();
+            Thread[] readers = new Thread[numReaders];
+            Thread[] writers = new Thread[numWriters];
+            AtomicInteger generator = new AtomicInteger();
+            AtomicBoolean finishedWriters = new AtomicBoolean();
+            WritersPhaser writersPhaser = new WritersPhaser(finishedWriters);
+            ConcurrentHashMap<String, String> values = new ConcurrentHashMap<>();
+            for (int i = 0; i < numReaders; i++) {
+                readers[i] = new Thread(new ReaderTask(values, queue, finishedWriters), "ReaderTask");
+                readers[i].start();
+            }
+            for (int i = 0; i < numWriters; i++) {
+                writers[i] = new Thread(new WriterTask(elements, generator, queue, writersPhaser), "WriterTask");
+                writers[i].start();
+            }
+            for (int i = 0; i < numWriters; i++) {
+                writers[i].join();
+            }
+            for (int i = 0; i < numReaders; i++) {
+                readers[i].join();
+            }
+            assertEquals(elements, values.size());
+            queue.close();
+        } finally {
+            LessPaths.recursiveDelete(path);
         }
-        for (int i = 0; i < numWriters; i++) {
-            writers[i] = new Thread(new WriterTask(elements, generator, queue, writersPhaser), "WriterTask");
-            writers[i].start();
-        }
-        for (int i = 0; i < numWriters; i++) {
-            writers[i].join();
-        }
-        for (int i = 0; i < numReaders; i++) {
-            readers[i].join();
-        }
-        assertEquals(elements, values.size());
-        queue.close();
-        LessPaths.recursiveDelete(path);
     }
 
     private static class WriterTask implements Runnable {
@@ -510,8 +612,8 @@ public class TestDiskBackedQueue {
                 while ((next = generator.getAndIncrement()) < max) {
                     queue.put(Integer.toString(next), null);
                 }
-            } catch (Exception ex) {
-                fail(ex.toString());
+            } catch (InterruptedException ex) {
+                fail();
             }
             phaser.arriveAndDeregister();
         }
@@ -551,19 +653,15 @@ public class TestDiskBackedQueue {
 
         @Override public void run() {
             boolean exit = false;
-            try {
-                while (true) {
-                    String next = queue.poll();
-                    if (next != null) {
-                        values.put(next, next);
-                    } else if (exit && (queue.diskQueueSize() == 0) && (queue.backgroundActiveTasks() == 0)) {
-                        return;
-                    } else if (finishedWriters.get()) {
-                        exit = true;
-                    }
+            while (true) {
+                String next = queue.poll();
+                if (next != null) {
+                    values.put(next, next);
+                } else if (exit && (queue.diskQueueSize() == 0) && (queue.backgroundActiveTasks() == 0)) {
+                    return;
+                } else if (finishedWriters.get()) {
+                    exit = true;
                 }
-            } catch (Exception ex) {
-                fail(ex.toString());
             }
         }
     }

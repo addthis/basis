@@ -210,7 +210,7 @@ class DiskBackedQueueInternals<E> implements Closeable {
                              long maxSize, int numBackgroundThreads, Path path, Serializer<E> serializer,
                              Duration terminationWait, boolean shutdownHook, boolean silent,
                              boolean compress, int compressionLevel, int compressionBuffer,
-                             boolean memoryDouble, boolean sharedScheduler) throws IOException {
+                             boolean memoryDouble, boolean sharedScheduler, boolean purgeOnInitErrors) throws IOException {
         this.pageSize = pageSize;
         this.maxPages = maxPages;
         this.maxDiskBytes = maxDiskBytes;
@@ -248,21 +248,32 @@ class DiskBackedQueueInternals<E> implements Closeable {
                                                                     0, 10, TimeUnit.MILLISECONDS));
             }
         }
-        Files.createDirectories(external);
         try {
-            Files.createFile(external.resolve(LOCKFILE));
-        } catch (FileAlreadyExistsException ex) {
-            throw new IOException("The lock file for " + external.toString() + " already exists. " +
-                                  "Either a concurrent attempt to open this queue" +
-                                  " or the queue was not shutdown cleanly.");
+            initialize();
+        } catch (IOException ex) {
+            if (purgeOnInitErrors) {
+                log.warn("Error reading {} external storage. Deleting all contents as purgeOnInitErrors is enabled.");
+                LessPaths.recursiveDelete(external);
+                initialize();
+            } else {
+                throw new IOException("Error attempting to open " + external + " external storage: ", ex);
+            }
         }
+        if (shutdownHook) {
+            Shutdown.tryAddShutdownHook(new Thread(this::close, "disk-backed-queue-shutdown"));
+        }
+    }
+
+    private void initialize() throws IOException {
+        Files.createDirectories(external);
+        Files.createFile(external.resolve(LOCKFILE));
         Optional<Path> minFile = Files.list(external).filter(EXCLUDE_METAFILES).min(
                 (f1, f2) -> (COMPARE_FILENAMES.compare(f1, f2)));
         Optional<Path> maxFile = Files.list(external).filter(EXCLUDE_METAFILES).max(
                 (f1, f2) -> (COMPARE_FILENAMES.compare(f1, f2)));
         if (minFile.isPresent() && maxFile.isPresent()) {
             long readPageId, writePageId;
-            readPageId  = Long.parseLong(minFile.get().getFileName().toString());
+            readPageId = Long.parseLong(minFile.get().getFileName().toString());
             writePageId = Long.parseLong(maxFile.get().getFileName().toString()) + 1;
             NavigableMap<Long, Page<E>> readPages = readPagesFromExternal(readPageId, minReadPages);
             readPage = readPages.remove(readPageId);
@@ -274,9 +285,6 @@ class DiskBackedQueueInternals<E> implements Closeable {
         } else {
             writePage = new Page<>(this, 0);
             readPage = writePage;
-        }
-        if (shutdownHook) {
-            Shutdown.tryAddShutdownHook(new Thread(this::close, "disk-backed-queue-shutdown"));
         }
     }
 

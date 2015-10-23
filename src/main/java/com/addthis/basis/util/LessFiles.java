@@ -13,8 +13,6 @@
  */
 package com.addthis.basis.util;
 
-import javax.annotation.Nonnull;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,13 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
-import java.io.UncheckedIOException;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public final class LessFiles {
 
