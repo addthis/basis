@@ -252,7 +252,8 @@ class DiskBackedQueueInternals<E> implements Closeable {
             initialize();
         } catch (IOException ex) {
             if (purgeOnInitErrors) {
-                log.warn("Error reading {} external storage. Deleting all contents as purgeOnInitErrors is enabled.");
+                log.warn("Error reading {} external storage. Deleting all contents as purgeOnInitErrors is enabled.",
+                         external);
                 LessPaths.recursiveDelete(external);
                 initialize();
             } else {
