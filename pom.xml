@@ -19,11 +19,16 @@
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.addthis</groupId>
-  <artifactId>basis</artifactId>
-  <packaging>jar</packaging>
+  <groupId>com.addthis.basis</groupId>
+  <artifactId>basis-parent</artifactId>
+  <packaging>pom</packaging>
   <version>3.0.7-SNAPSHOT</version>
-  <name>basis</name>
+  <modules>
+    <module>basis-net</module>
+    <module>basis-time</module>
+    <module>basis-core</module>
+    <module>basis-netty</module>
+  </modules>
   <url>https://github.com/addthis/basis</url>
   <description>AddThis core java classes</description>
   <licenses>
@@ -35,54 +40,9 @@
 
   <properties>
     <project.build.targetJdk>1.8</project.build.targetJdk>
+    <basis.dep.org.apache.httpcomponents.httpclient.version>4.4.1</basis.dep.org.apache.httpcomponents.httpclient.version>
+    <basis.dep.netty4.version>4.0.28.Final</basis.dep.netty4.version>
   </properties>
-
-  <dependencies>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-    </dependency>
-    <dependency>
-      <artifactId>jackson-core</artifactId>
-      <groupId>com.fasterxml.jackson.core</groupId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.4.1</version>
-    </dependency>
-    <dependency>
-      <groupId>joda-time</groupId>
-      <artifactId>joda-time</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-buffer</artifactId>
-      <version>4.0.28.Final</version>
-    </dependency>
-
-    <!-- test -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${dep.junit.version}</version>
-      <scope>compile</scope>
-      <optional>true</optional>
-    </dependency>
-  </dependencies>
 
   <reporting>
     <plugins>
@@ -100,10 +60,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-site-plugin</artifactId>
           <version>3.4</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <version>2.9</version>
         </plugin>
       </plugins>
     </pluginManagement>

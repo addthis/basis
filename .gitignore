@@ -1,7 +1,7 @@
 target/
 .classpath
 .project
-basis.iml
+*.iml
 .settings/
 .idea/
 pom.xml.versionsBackup
