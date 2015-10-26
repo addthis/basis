@@ -22,7 +22,7 @@
   <groupId>com.addthis.basis</groupId>
   <artifactId>basis-parent</artifactId>
   <packaging>pom</packaging>
-  <version>3.0.7-SNAPSHOT</version>
+  <version>4.0.0</version>
   <modules>
     <module>basis-net</module>
     <module>basis-time</module>
@@ -69,6 +69,6 @@
     <connection>scm:git:git@github.com:addthis/basis.git</connection>
     <developerConnection>scm:git:git@github.com:addthis/basis.git</developerConnection>
     <url>https://github.com/addthis/basis</url>
-    <tag>HEAD</tag>
+    <tag>v4.0.0</tag>
   </scm>
 </project>
