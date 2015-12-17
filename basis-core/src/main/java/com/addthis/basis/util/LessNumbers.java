@@ -111,10 +111,11 @@ public class LessNumbers {
             throw new RuntimeException(base + " outside base range of 2-" + basechars.length);
         }
         long rv = 0;
-        char[] cv = val.toCharArray();
-        for (char aCv : cv) {
+        int length = val.length();
+        for (int i = 0; i < length; i++) {
+            char aCv = val.charAt(i);
             rv *= base;
-            int av = 0;
+            int av;
             if (aCv >= '0' && aCv <= '9') {
                 av = aCv - '0';
             } else if (aCv >= 'a' && aCv <= 'z') {
@@ -147,8 +148,9 @@ public class LessNumbers {
             throw new RuntimeException(base + " outside base range of 2-" + basechars.length);
         }
         int rv = 0;
-        char[] cv = val.toCharArray();
-        for (char aCv : cv) {
+        int length = val.length();
+        for (int i = 0; i < length; i++) {
+            char aCv = val.charAt(i);
             rv *= base;
             rv += charToDigit(aCv, val);
         }
@@ -321,10 +323,10 @@ public class LessNumbers {
         }
         BigInteger rv = BigInteger.ZERO;
         BigInteger biBase = BigInteger.valueOf(base);
-        char[] cv = val.toCharArray();
-        for (int i = 0; i < cv.length; i++) {
+        int length = val.length();
+        for (int i = 0; i < length; i++) {
             rv = rv.multiply(biBase);
-            char cvv = cv[i];
+            char cvv = val.charAt(i);
             if (cvv >= '0' && cvv <= '9') {
                 rv = rv.add(bigIntegerChars[cvv - '0']);
             } else if (cvv >= 'a' && cvv <= 'z') {
@@ -343,14 +345,13 @@ public class LessNumbers {
     }
 
     public static UUID UUIDFromBase64(String val) {
-        char[] cv = val.toCharArray();
         long hiBits = 0;
         int pos = 0;
         for(int i = 0; i < 11; i++) {
             hiBits <<= 6;
-            hiBits += charToDigit(cv[pos++], val);
+            hiBits += charToDigit(val.charAt(pos++), val);
         }
-        int mixBits = charToDigit(cv[pos++], val);
+        int mixBits = charToDigit(val.charAt(pos++), val);
         hiBits <<= 2;
         hiBits += (mixBits >>> 4);
         /**
@@ -361,7 +362,7 @@ public class LessNumbers {
         long loBits = mixBits;
         for(int i = 0; i < 10; i++) {
             loBits <<= 6;
-            loBits += charToDigit(cv[pos++], val);
+            loBits += charToDigit(val.charAt(pos++), val);
         }
         return new UUID(hiBits, loBits);
     }
