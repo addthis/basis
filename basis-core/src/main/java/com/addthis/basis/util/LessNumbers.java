@@ -100,10 +100,10 @@ public class LessNumbers {
      * Does not handle negative numbers;
      */
     public static long longFromBase(String val, int base) {
-        return longFromBase(val, base, false);
+        return longFromBase(val, base, false, false);
     }
 
-    public static long longFromBase(String val, int base, boolean fallback) {
+    public static long longFromBase(CharSequence val, int base, boolean fallback, boolean toLower) {
         if (base > basechars.length) {
             if (fallback) {
                 return fallbackHashFunc.hashUnencodedChars(val).asLong();
@@ -114,6 +114,9 @@ public class LessNumbers {
         int length = val.length();
         for (int i = 0; i < length; i++) {
             char aCv = val.charAt(i);
+            if (toLower) {
+                aCv = Character.toLowerCase(aCv);
+            }
             rv *= base;
             int av;
             if (aCv >= '0' && aCv <= '9') {
@@ -143,7 +146,11 @@ public class LessNumbers {
      * Converts a base-encoded string to an integer.
      * Does not handle negative numbers;
      */
-    public static int intFromBase(String val, int base) {
+    public static int intFromBase(CharSequence val, int base) {
+        return intFromBase(val, base, false);
+    }
+
+    private static int intFromBase(CharSequence val, int base, boolean toLower) {
         if (base > basechars.length) {
             throw new RuntimeException(base + " outside base range of 2-" + basechars.length);
         }
@@ -151,6 +158,9 @@ public class LessNumbers {
         int length = val.length();
         for (int i = 0; i < length; i++) {
             char aCv = val.charAt(i);
+            if (toLower) {
+                aCv = Character.toLowerCase(aCv);
+            }
             rv *= base;
             rv += charToDigit(aCv, val);
         }
@@ -277,31 +287,31 @@ public class LessNumbers {
         }
     }
 
-    public static long longFromBase36(String val) {
-        return longFromBase(val.toLowerCase(), 36);
+    public static long longFromBase36(CharSequence val) {
+        return longFromBase(val, 36, false, true);
     }
 
-    public static long longFromBase64(String val) {
-        return longFromBase(val, 64);
+    public static long longFromBase64(CharSequence val) {
+        return longFromBase(val, 64, false, false);
     }
 
     public static String toBase36(long val) {
         return toBase(val, 36).toUpperCase();
     }
 
-    public static int intFromBase36(String val) {
-        return intFromBase(val.toLowerCase(), 36);
+    public static int intFromBase36(CharSequence val) {
+        return intFromBase(val, 36, true);
     }
 
     public static String toBase64(long val) {
         return toBase(val, 64);
     }
 
-    public static int intFromBase64(String val) {
-        return intFromBase(val, 64);
+    public static int intFromBase64(CharSequence val) {
+        return intFromBase(val, 64, false);
     }
 
-    static int charToDigit(char character, String val) {
+    static int charToDigit(char character, CharSequence val) {
         if (character >= '0' && character <= '9') {
             return character - '0';
         } else if (character >= 'a' && character <= 'z') {

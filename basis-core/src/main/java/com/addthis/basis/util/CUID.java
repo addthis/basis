@@ -87,7 +87,7 @@ public class CUID {
             return 0L;
         }
         try {
-            return LessNumbers.longFromBase(cuid, 16, true);
+            return LessNumbers.longFromBase(cuid, 16, true, false);
         } catch (Exception ex) {
             System.out.println("invalid cuid : " + cuid);
             return fallbackHashFunc.hashUnencodedChars(cuid).asLong();
