@@ -8,3 +8,6 @@ This product also includes code adapted from:
 Apache Cassandra (http://cassandra.apache.org)
 Copyright 2014 The Apache Software Foundation
 
+concurrentlinkedhashmap (https://code.google.com/p/concurrentlinkedhashmap/)
+Copyright 2012 Google Inc.
+Apache License, Version 2.0
