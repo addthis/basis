@@ -39,7 +39,7 @@ public class CookieSafeBase90 {
      * Code can use this to determine if a character is in the low or high range.
      * Implementation is left as an exercise to the reader.
      */
-    private static final int MIDDLE_CHAR = basechars[BASE45];
+    public static final int MIDDLE_CHAR = basechars[BASE45];
 
     /**
      * Encode a number into a string that can be used without delimiters.
