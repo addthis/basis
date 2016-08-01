@@ -54,7 +54,7 @@ public class CookieSafeBase90 {
 
     /**
      * Encode a number into a string that can be used without delimiters.
-     * Only positive numbers can be encoded. Use this method to make your own cookie format.
+     * Only positive numbers can be encoded. This method can be used to make custom cookie formats.
      *
      * @param value         the number to encode
      * @param highRange     whether to use the bottom 45 or top 45 characters
@@ -69,7 +69,7 @@ public class CookieSafeBase90 {
             boolean isFlip = flipLastByte && (i == (out.length - 1));
             int index = (int) Math.abs(value % BASE45);
             // NOTE: this is non-obvious how this if statement works!
-            // if high and no flip, of if low and flip, add base
+            // if high and no flip, or if low and flip, add base
             // if high and flip, or if low and no flip, do nothing
             if (isFlip != highRange) {
                 index += BASE45;
@@ -197,6 +197,9 @@ public class CookieSafeBase90 {
     /**
      * All characters are in numerical order in the BASECHARS array. Here we
      * simply find the position of the char in that array and return the index.
+     *
+     * @param  c    the char to convert from base 90
+     * @return      the value of the char in base 10
      */
     private static int decodeChar(int c) {
         int decoded = 0;
@@ -219,7 +222,7 @@ public class CookieSafeBase90 {
     /**
      * Decodes a long from a cookie string encoded by {@link #encodeBase90Signed(long)}
      * or {@link #encodeBase90Unsigned(long)}. This method cannot determine which method
-     * was used to encode, so you must tell it if the number is signed.
+     * was used to encode, it must be told if the number is signed.
      *
      * @param charSequence  The cookie string to decode
      * @param signed        true if the number was encoded with <code>encodeBase90Signed</code>
@@ -246,6 +249,9 @@ public class CookieSafeBase90 {
     /**
      * Decodes a long from a cookie string that was encoded by {@link #encodeBase45(long, boolean, boolean)}.
      * Does not handle negative numbers. Does handle all 4 possible permutations of each number.
+     *
+     * @param charSequence  The cookie string to decode
+     * @return              the decoded number
      */
     public static long decodeBase45(CharSequence charSequence) {
         long sum = 0;
