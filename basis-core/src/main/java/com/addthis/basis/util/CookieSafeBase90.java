@@ -46,8 +46,9 @@ public class CookieSafeBase90 {
     private static final int MAX_NUMBER_LENGTH = 12;
     /**
      * Exposed for use by code using {@link #encodeBase45(long, boolean, boolean)}
-     * Code can use this to determine if a character is in the low or high range.
-     * Implementation is left as an exercise to the reader.
+     * Cookie parsers can use this to determine whether a character is in the high or low range of base90 characters.
+     * For example, if one type of number was encoded with flipLastByte=true, the parser
+     * would need to check if each character was high or low to find the end of the encoded number.
      */
     public static final int MIDDLE_CHAR = BASECHARS[BASE45];
 
