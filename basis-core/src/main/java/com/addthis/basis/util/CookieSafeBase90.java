@@ -53,7 +53,7 @@ public class CookieSafeBase90 {
     public static final int MIDDLE_CHAR = BASECHARS[BASE45];
 
     /**
-     * Encode a number into a string that can be used without delimiters.
+     * Encodes a number into a string that can be used without delimiters.
      * Only positive numbers can be encoded. This method can be used to make custom cookie formats.
      *
      * @param value         the number to encode
@@ -87,7 +87,7 @@ public class CookieSafeBase90 {
     }
 
     /**
-     * Encode a positive number into base 90, returning a variable string length.
+     * Encodes a positive number into base 90, returning a variable string length.
      * Negative numbers will be encoded as if they were positive.
      *
      * @param value the number to encode
@@ -98,7 +98,7 @@ public class CookieSafeBase90 {
     }
 
     /**
-     * Encode a positive or negative number into base 90. The returned string will always be
+     * Encodes a positive or negative number into base 90. The returned string will always be
      * ten characters. The fixed length encoding makes adding sign information easy.
      * This is used by {@link #encodeBytesBase90(byte[])} but is public in case it is useful.
      *
