@@ -2,13 +2,9 @@ package com.addthis.basis.util;
 
 import java.nio.ByteBuffer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * This is a utility class for encoding numbers and bytes into the 90 characters that
  * are absolutely guaranteed to work in cookies across all broswers for a long time.
- * @see <a href="http://stackoverflow.com/a/1969339/1238727">Allowed characters in cookies</a>
  *
  * There are a few main ways to use this class:
  * {@link #encodeBase45(long, boolean, boolean)} and {@link #decodeBase45(CharSequence)}
@@ -24,12 +20,13 @@ import org.slf4j.LoggerFactory;
  * These methods allow encoding and decoding of arbitrary data. The byte array is converted
  * to longs, encoded using <code>encodeBase90Signed</code>, and there is one extra character
  * at the end telling the decoder how many bytes the last decoded long represents.
+ *
+ * @see <a href="http://stackoverflow.com/a/1969339/1238727">Allowed characters in cookies</a>
  */
 public class CookieSafeBase90 {
-    private static final Logger log = LoggerFactory.getLogger(CookieSafeBase90.class);
     // these are the 90 chars we can use for the encoding. they are ordered in numerical order.
-    private static final char[] basechars = ("!#$%&'()*+-./0123456789:<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_" +
-                                      "`abcdefghijklmnopqrstuvwxyz{|}~").toCharArray();
+    private static final char[] BASECHARS = ("!#$%&'()*+-./0123456789:<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_" +
+                                             "`abcdefghijklmnopqrstuvwxyz{|}~").toCharArray();
     private static final int BASE45 = 45;
     private static final int BASE90 = 90;
     // our char arrays need to be big enough to handle any long in base45.
@@ -39,7 +36,7 @@ public class CookieSafeBase90 {
      * Code can use this to determine if a character is in the low or high range.
      * Implementation is left as an exercise to the reader.
      */
-    public static final int MIDDLE_CHAR = basechars[BASE45];
+    public static final int MIDDLE_CHAR = BASECHARS[BASE45];
 
     /**
      * Encode a number into a string that can be used without delimiters.
@@ -64,7 +61,7 @@ public class CookieSafeBase90 {
                 index += BASE45;
             }
             value = value / BASE45;
-            out[i] = basechars[index];
+            out[i] = BASECHARS[index];
             int currentSize = out.length - i;
             boolean isLast = (value == 0) || (i == 0);
             boolean isDone = isLast && ((currentSize != 1) || !flipLastByte);
@@ -109,12 +106,12 @@ public class CookieSafeBase90 {
             if ((i == 0) && (value < 0)) {
                 index += BASE45;
             }
-            out[i] = basechars[index];
+            out[i] = BASECHARS[index];
             value = value / BASE90;
             if ((--minLength <= 0) && ((value == 0) || (i == 0))) {
                 // encode negative numbers
                 if (negative) {
-                    out[i] = basechars[index + BASE45];
+                    out[i] = BASECHARS[index + BASE45];
                 }
                 return new String(out, i, out.length - i);
             }
@@ -151,7 +148,6 @@ public class CookieSafeBase90 {
                 valueToEncode = temp.getLong();
                 lastWordBytesToKeep = remaining;
             }
-            // fixme: need to pad value here.
             String encoded = encodeBase90Signed(valueToEncode);
             builder.append(encoded);
         }
@@ -185,7 +181,7 @@ public class CookieSafeBase90 {
     }
 
     /**
-     * All characters are in numerical order in the basechars array. Here we
+     * All characters are in numerical order in the BASECHARS array. Here we
      * simply find the position of the char in that array and return the index.
      */
     private static int decodeChar(int c) {
