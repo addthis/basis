@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.addthis.basis.kafka8;
+package com.addthis.basis.kafka;
 
 import java.io.Closeable;
 

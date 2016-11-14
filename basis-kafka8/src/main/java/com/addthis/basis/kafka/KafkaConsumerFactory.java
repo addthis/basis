@@ -1,4 +1,4 @@
-package com.addthis.basis.kafka8;
+package com.addthis.basis.kafka;
 
 import javax.validation.constraints.NotNull;
 
