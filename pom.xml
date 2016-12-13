@@ -30,7 +30,6 @@
         <module>basis-core</module>
         <module>basis-netty</module>
         <module>basis-kafka8</module>
-        <module>basis-kafka10</module>
     </modules>
     <url>https://github.com/addthis/basis</url>
     <description>AddThis core java classes</description>
