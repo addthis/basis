@@ -17,6 +17,7 @@ import java.io.Closeable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -40,7 +41,6 @@ import kafka.javaapi.consumer.ConsumerConnector;
 import kafka.message.MessageAndMetadata;
 import kafka.serializer.Decoder;
 
-import static com.addthis.hydra.kafka.consumer.ConsumerUtils.newConsumerConfig;
 import static com.codahale.metrics.MetricRegistry.name;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -135,6 +135,14 @@ public class KafkaConsumerService<K, V> implements Closeable {
             this.messageHandler.close();
             logger.info("shut down kafka consumer");
         }
+    }
+
+    public static ConsumerConfig newConsumerConfig(String zookeeper, Map<String,String> overrides) {
+        Properties config = new Properties();
+        config.put("zookeeper.connect", zookeeper);
+        config.put("num.consumer.fetchers", "1");
+        config.putAll(overrides);
+        return new ConsumerConfig(config);
     }
 
     public static <K, V> Builder<K, V> newBuilder() {
