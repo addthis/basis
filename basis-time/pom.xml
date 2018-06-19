@@ -17,7 +17,7 @@
   <parent>
     <artifactId>basis-parent</artifactId>
     <groupId>com.addthis.basis</groupId>
-    <version>4.3.1-SNAPSHOT</version>
+    <version>4.3.1</version>
   </parent>
   <artifactId>basis-time</artifactId>
   <licenses>
