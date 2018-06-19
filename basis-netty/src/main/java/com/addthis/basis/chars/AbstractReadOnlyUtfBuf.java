@@ -15,7 +15,7 @@
 package com.addthis.basis.chars;
 
 import com.google.common.annotations.Beta;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 /**
  * A CharSequence backed by utf-8 bytes instead of java chars (ie. utf-16 bytes)
@@ -301,7 +301,7 @@ public abstract class AbstractReadOnlyUtfBuf implements ReadableCharBuf {
 
     public String toDebugString() {
         int cacheInstance = packedIndexCache;
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("byteLength", getByteLength())
                 .add("byteIndex", cacheCharIndex(cacheInstance))
                 .add("charDelta", cacheByteOffset(cacheInstance))
