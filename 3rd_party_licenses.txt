@@ -1,0 +1,152 @@
+LICENSES FOR THIRD-PARTY COMPONENTS 
+
+===============================================================================
+   
+The following sections list licensing information for
+libraries included with the basis source and components
+used to test basis. 
+
+The following software may be included in this product:
+
+===============================================================================
+
+        SLF4J Simple Binding 
+
+        SLF4J API Module 
+
+ Copyright (c) 2004-2007 QOS.ch
+
+SLF4J Simple Binding 1.7.25 and SLF4J API Module 1.7.25 use MIT license, shown below. See the License for details about distribution rights, and the specific rights regarding derivate works. 
+
+
+https://opensource.org/licenses/mit-license.php
+
+--------------------------------------------------------------------------- 
+
+        JUnit
+
+  
+
+JUnit » 4.12 uses Eclipse Public License - Version 1.0, shown below. See the License for details about distribution rights, and the specific rights regarding derivate works. 
+
+
+http://www.eclipse.org/org/documents/epl-v10.php
+
+
+--------------------------------------------------------------------------- 
+
+        Guava: Google Core Libraries For Java
+
+Guava: Google Core Libraries For Java » 24.1-jre uses the Apache 2.0 license, shown below. See the License for details about distribution rights, and the specific rights regarding derivate works.
+
+http://www.apache.org/licenses/LICENSE-2.0.txt
+
+--------------------------------------------------------------------------- 
+
+        Jackson Databind » 2.9.5
+        Jackson Core » 2.9.5
+        //Jackson Annotations » 2.9.5
+        //Jackson Datatype: Guava » 2.9.5
+        //Jackson Datatype: JDK8 » 2.9.5
+        //Jackson Datatype: JSR310 » 2.9.5
+        //Jackson Datatype Joda » 2.9.5
+
+Apache 2.0 license, shown below. See the License for details about distribution rights, and the specific rights regarding derivate works. 
+
+  
+http://www.apache.org/licenses/LICENSE-2.0.html
+
+---------------------------------------------------------------------------
+
+        FindBugs JSR305
+
+FindBugs JSR305 » 3.0.2 uses GNU Lesser General Public License and Apache 2.0 license, shown below. See the License for details about distribution rights, and the specific rights regarding derivate works. 
+
+  
+http://www.gnu.org/licenses/lgpl.html
+http://www.apache.org/licenses/LICENSE-2.0.html
+
+--------------------------------------------------------------------------- 
+
+        Apache HttpClient » 4.4.1
+
+Apache HttpComponents Client
+Copyright 1999-2015 The Apache Software Foundation
+
+Apache 2.0 license, shown below. See the License for details about distribution rights, and the specific rights regarding derivate works. 
+
+https://github.com/apache/httpcomponents-client/blob/4.4.x/LICENSE.txt
+
+---------------------------------------------------------------------------
+
+        Joda Time » 2.5
+
+Apache 2.0 license, shown below. See the License for details about distribution rights, and the specific rights regarding derivate works. 
+
+  
+http://www.apache.org/licenses/LICENSE-2.0.html
+
+---------------------------------------------------------------------------
+
+
+        Netty/Buffer » 4.0.28.Final
+        //Netty/All In One » 4.1.23.Final
+
+Copyright 2014 The Netty Project
+  
+
+Netty/Buffer » 4.0.28.Final uses the Apache 2.0 license, shown below. See the License for details about distribution rights, and the specific rights regarding derivate works. 
+
+  
+
+https://github.com/netty/netty/blob/4.0/LICENSE.txt
+
+---------------------------------------------------------------------------
+
+        Metrics Core » 3.1.2
+
+Metrics
+Copyright 2010-2013 Coda Hale and Yammer, Inc.
+
+This product includes software developed by Coda Hale and Yammer, Inc.
+
+This product includes code derived from the JSR-166 project (ThreadLocalRandom, Striped64,
+LongAdder), which was released with the following comments:
+
+    Written by Doug Lea with assistance from members of JCP JSR-166
+    Expert Group and released to the public domain, as explained at
+    http://creativecommons.org/publicdomain/zero/1.0/
+
+Apache 2.0 license, shown below. See the License for details about distribution rights, and the specific rights regarding derivate works. 
+
+https://github.com/dropwizard/metrics/blob/3.1-maintenance/LICENSE
+
+---------------------------------------------------------------------------
+        
+        Apache Kafka » 0.8.2.2 (kafka_2.10)
+
+Copyright 2012 The Apache Software Foundation.
+
+Listed under the Apache 2.0 license, shown below. See the License for details about distribution rights, and the specific rights regarding derivate works.
+
+http://www.apache.org/licenses/LICENSE-2.0.txt
+
+---------------------------------------------------------------------------
+
+        Bean Validation API » 1.1.0.Final
+
+# List of contributors
+
+Red Hat Inc.
+Dhanji R. Prasanna
+Emmanuel Bernard
+Gavin King
+Gerhard Petracek
+Gunnar Morling
+Hardy Ferentschik
+Kevin Pollet
+Sebastian Thomschke
+
+Apache 2.0 license, shown below. See the License for details about distribution rights, and the specific rights regarding derivate works.
+
+http://www.apache.org/licenses/LICENSE-2.0.txt
